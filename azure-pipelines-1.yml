@@ -1,0 +1,35 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+# Install Azure CLI (if not pre-installed)
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'MyAzureServiceConnection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az group create --name myResourceGroup --location eastus
+      az deployment group create \
+        --resource-group myResourceGroup \
+        --template-file deploy.bicep \
+        --parameters \
+          acrName=depdocker \
+          appServicePlanName=myAppServicePlan \
+          webAppName=myWebApp \
+          imageName=hello-world \
+          imageTag=latest
+    addSpnToEnvironment: true
+
+# Optionally, test the deployment result by querying resources
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: 'MyAzureServiceConnection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      az webapp show --name myWebApp --resource-group myResourceGroup
+    addSpnToEnvironment: true

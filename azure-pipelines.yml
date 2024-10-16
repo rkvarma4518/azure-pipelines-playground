@@ -1,1 +1,41 @@
-docker
+trigger:
+- main  # Change this to the branch you want to trigger the pipeline
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  dockerHubServiceConnection: 'dockerhub'  # Name of your DockerHub service connection
+  ACRServiceConnection: 'azure-registry'  # Name of your ACR service connection
+  azureRegistry: 'depdocker'              # Replace with your Azure Container Registry name
+  imageName: 'hello-world'                           # Docker image name from DockerHub (e.g., 'nginx')
+  imageVersion: 'latest'                                   # Docker image version/tag from DockerHub (e.g., 'latest')
+
+steps:
+# Step 1: Log in to DockerHub (using the service connection you created)
+- task: Docker@2
+  inputs:
+    containerRegistry: '$(dockerHubServiceConnection)'  # This is your DockerHub service connection
+    command: 'login'
+
+# Step 2: Pull the Docker image from DockerHub
+- script: |
+    docker pull $(imageName):$(imageVersion)
+    docker tag $(imageName):$(imageVersion) $(azureRegistry).azurecr.io/$(imageName):$(imageVersion)
+    docker images
+  displayName: 'Pull and Tag Docker Image'
+
+# Step 3: Log in to Azure Container Registry (ACR)
+- task: Docker@2
+  inputs:
+    containerRegistry: '$(ACRServiceConnection)'  # Name of the ACR service connection
+    command: 'login'
+
+# Step 4: Push the image to Azure Container Registry (ACR)
+- task: Docker@2
+  inputs:
+    containerRegistry: '$(ACRServiceConnection)'  # Your ACR service connection name
+    repository: '$(imageName)'  # ACR repository path
+    command: 'push'
+    tags: '$(imageVersion)'
+  displayName: 'Push Docker Image to ACR'

@@ -1,7 +1,7 @@
 // Parameters
 param containerGroupName string = 'myContainerGroup'
 param containerName string = 'myContainer'
-param imageName string = 'depdocker/hello-world:latest' // Your ACR image
+param imageName string = 'depdocker.azurecr.io/hello-world:latest' // Your ACR image
 param cpuCores int = 1
 param memoryGb int = 2 // Use int for memory size
 param location string = resourceGroup().location

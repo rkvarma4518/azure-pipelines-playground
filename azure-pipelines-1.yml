@@ -8,7 +8,7 @@ steps:
 # Install Azure CLI (if not pre-installed)
 - task: AzureCLI@2
   inputs:
-    azureSubscription: 'MyAzureServiceConnection'
+    azureSubscription: 'azure-resource'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
@@ -27,7 +27,7 @@ steps:
 # Optionally, test the deployment result by querying resources
 - task: AzureCLI@2
   inputs:
-    azureSubscription: 'MyAzureServiceConnection'
+    azureSubscription: 'azure-resource'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |

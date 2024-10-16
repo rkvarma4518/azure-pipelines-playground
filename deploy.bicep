@@ -3,9 +3,9 @@ param containerGroupName string = 'myContainerGroup'
 param containerName string = 'myContainer'
 param imageName string = 'depdocker/hello-world:latest' // Your ACR image
 param cpuCores int = 1
-param memoryGb float = 1.5
+param memoryGb int = 2 // Use int for memory size
 param location string = resourceGroup().location
-param acrRegistryName string = 'depdocker' // Your ACR registry name
+param acrRegistryName string = 'myACRRegistryName' // Your ACR registry name
 
 // ACR Resource reference
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01' existing = {
@@ -37,7 +37,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
         }
       }
     ]
-    osType: 'Linux' // or 'Windows' depending on your container image
+    osType: 'Linux'
     ipAddress: {
       type: 'Public'
       ports: [
@@ -46,7 +46,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
           port: 80
         }
       ]
-      dnsNameLabel: uniqueString(resourceGroup().id) // Creates a DNS name for the ACI
+      dnsNameLabel: uniqueString(resourceGroup().id)
     }
     imageRegistryCredentials: [
       {

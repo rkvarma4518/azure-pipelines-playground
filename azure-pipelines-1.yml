@@ -5,14 +5,13 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-# Install Azure CLI (if not pre-installed)
+# Deploy resources using the existing resource group
 - task: AzureCLI@2
   inputs:
     azureSubscription: 'azure-resource'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az group create --name deploy --location eastus
       az deployment group create \
         --resource-group deploy \
         --template-file deploy.bicep \

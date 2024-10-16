@@ -19,7 +19,7 @@ steps:
 
   - task: AzureCLI@2
     inputs:
-      azureSubscription: 'resource-manager' # Use the Azure Service connection
+      azureSubscription: 'azure-resource-manager' # Use the Azure Service connection
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
       inlineScript: |

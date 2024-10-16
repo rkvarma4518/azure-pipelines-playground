@@ -5,7 +5,7 @@ param imageName string = 'depdocker/hello-world:latest' // Your ACR image
 param cpuCores int = 1
 param memoryGb int = 2 // Use int for memory size
 param location string = resourceGroup().location
-param acrRegistryName string = 'myACRRegistryName' // Your ACR registry name
+param acrRegistryName string = 'depdocker' // Your ACR registry name
 
 // ACR Resource reference
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01' existing = {

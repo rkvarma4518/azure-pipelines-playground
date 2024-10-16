@@ -1,34 +1,31 @@
+# File: azure-pipelines.yml
 trigger:
-- main
+  branches:
+    include:
+      - main # Trigger on changes to the main branch (or any branch you prefer)
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: 'ubuntu-latest' # Use a VM to run the steps
 
 steps:
-# Deploy resources using the existing resource group
-- task: AzureCLI@2
-  inputs:
-    azureSubscription: 'azure-resource'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      az deployment group create \
-        --resource-group deploy \
-        --template-file deploy.bicep \
-        --parameters \
-          acrName=depdocker \
-          appServicePlanName=myAppServicePlan \
-          webAppName=myWebApp \
-          imageName=hello-world \
-          imageTag=latest
-    addSpnToEnvironment: true
+  # Step 1: Checkout the Bicep file from GitHub
+  - checkout: self
 
-# Optionally, test the deployment result by querying resources
-- task: AzureCLI@2
-  inputs:
-    azureSubscription: 'azure-resource'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      az webapp show --name myWebApp --resource-group deploy
-    addSpnToEnvironment: true
+  # Step 2: Install Azure CLI (if not pre-installed)
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+      addToPath: true
+
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: 'resource-manager' # Use the Azure Service connection
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        echo "Deploying Bicep File..."
+        az group create --name myResourceGroup --location eastus
+        az deployment group create \
+          --resource-group myResourceGroup \
+          --template-file deploy.bicep \
+      workingDirectory: $(System.DefaultWorkingDirectory)

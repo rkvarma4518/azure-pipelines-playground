@@ -12,9 +12,9 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az group create --name myResourceGroup --location eastus
+      az group create --name deploy --location eastus
       az deployment group create \
-        --resource-group myResourceGroup \
+        --resource-group deploy \
         --template-file deploy.bicep \
         --parameters \
           acrName=depdocker \
@@ -31,5 +31,5 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      az webapp show --name myWebApp --resource-group myResourceGroup
+      az webapp show --name myWebApp --resource-group deploy
     addSpnToEnvironment: true

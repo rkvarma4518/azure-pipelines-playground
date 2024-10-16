@@ -14,8 +14,8 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
     tier: 'PremiumV2'
     size: 'P1v2'
   }
-  kind: 'Linux'
-  reserved: true
+  kind: 'Linux' // Specify the kind as Linux
+  reserved: true // Set reserved to true for Linux
 }
 
 // Web App (Linux container) with Managed Identity enabled
@@ -37,11 +37,11 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
         }
         {
           name: 'DOCKER_REGISTRY_SERVER_USERNAME'
-          value: listCredentials(resourceId('Microsoft.ContainerRegistry/registries', acrName), '2022-03-01').username
+          value: '$(acr.listCredentials().username)' // Use variable reference for ACR credentials
         }
         {
           name: 'DOCKER_REGISTRY_SERVER_PASSWORD'
-          value: listCredentials(resourceId('Microsoft.ContainerRegistry/registries', acrName), '2022-03-01').passwords[0].value
+          value: '$(acr.listCredentials().passwords[0].value)' // Use variable reference for ACR credentials
         }
       ]
       linuxFxVersion: 'DOCKER|depdocker.azurecr.io/${imageName}:${imageTag}' // Image from ACR
@@ -57,8 +57,9 @@ resource acr 'Microsoft.ContainerRegistry/registries@2022-03-01' existing = {
 // Assign ACR Pull role to the App Service Managed Identity
 resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
   scope: acr
-  roleDefinitionId: '/subscriptions/${subscription().subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/7f951dda-4ed3-4680-a7ca-43fe172d538d' // AcrPull role
-  principalId: webApp.identity.principalId
-  // Generate a new GUID for the role assignment
-  name: guid(webApp.id, acr.id, 'AcrPullRoleAssignment')
+  properties: {
+    roleDefinitionId: '/subscriptions/${subscription().subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/7f951dda-4ed3-4680-a7ca-43fe172d538d' // AcrPull role
+    principalId: webApp.identity.principalId
+  }
+  name: guid(webApp.id, acr.id, 'AcrPullRoleAssignment') // Generate a new GUID for the role assignment
 }

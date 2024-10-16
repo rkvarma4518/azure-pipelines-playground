@@ -21,7 +21,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: containerName
         properties: {
-          image: '${acr.properties.loginServer}/${imageName}' // Full path to the image in ACR
+          image: '${imageName}' // Full path to the image in ACR
           resources: {
             requests: {
               cpu: cpuCores

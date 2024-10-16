@@ -1,60 +1,59 @@
-// Variables
+// Parameters
+param containerGroupName string = 'myContainerGroup'
+param containerName string = 'myContainer'
+param imageName string = 'depdocker/hello-world:latest' // Your ACR image
+param cpuCores int = 1
+param memoryGb float = 1.5
 param location string = resourceGroup().location
-param appServicePlanName string = 'myAppServicePlan'
-param webAppName string = 'myWebApp'
-param acrName string = 'depdocker' // Your ACR name
-param imageName string = 'hello-world' // Your ACR image name
-param imageTag string = 'latest' // The tag of your image
+param acrRegistryName string = 'depdocker' // Your ACR registry name
 
-// App Service Plan (Linux)
-resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
-  name: appServicePlanName
-  location: location
-  sku: {
-    tier: 'PremiumV2'
-    size: 'P1v2'
-  }
-  kind: 'linux' // Specify the kind as Linux
+// ACR Resource reference
+resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01' existing = {
+  name: acrRegistryName
 }
 
-// Web App (Linux container) with Managed Identity enabled
-resource webApp 'Microsoft.Web/sites@2022-03-01' = {
-  name: webAppName
+// ACI: Azure Container Instance resource
+resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
+  name: containerGroupName
   location: location
   properties: {
-    httpsOnly: true
-    serverFarmId: appServicePlan.id // Correctly set serverFarmId
-    siteConfig: {
-      appSettings: [
-        {
-          name: 'DOCKER_REGISTRY_SERVER_URL'
-          value: 'https://depdocker.azurecr.io' // ACR URL
+    containers: [
+      {
+        name: containerName
+        properties: {
+          image: '${acr.properties.loginServer}/${imageName}' // Full path to the image in ACR
+          resources: {
+            requests: {
+              cpu: cpuCores
+              memoryInGb: memoryGb
+            }
+          }
+          ports: [
+            {
+              protocol: 'TCP'
+              port: 80 // The port the container will listen on
+            }
+          ]
         }
+      }
+    ]
+    osType: 'Linux' // or 'Windows' depending on your container image
+    ipAddress: {
+      type: 'Public'
+      ports: [
         {
-          name: 'DOCKER_REGISTRY_SERVER_USERNAME'
-          value: listCredentials(resourceId('Microsoft.ContainerRegistry/registries', acrName), '2022-03-01').username
-        }
-        {
-          name: 'DOCKER_REGISTRY_SERVER_PASSWORD'
-          value: listCredentials(resourceId('Microsoft.ContainerRegistry/registries', acrName), '2022-03-01').passwords[0].value
+          protocol: 'TCP'
+          port: 80
         }
       ]
-      linuxFxVersion: 'DOCKER|depdocker.azurecr.io/${imageName}:${imageTag}' // Image from ACR
+      dnsNameLabel: uniqueString(resourceGroup().id) // Creates a DNS name for the ACI
     }
+    imageRegistryCredentials: [
+      {
+        server: acr.properties.loginServer
+        username: acr.listCredentials().username
+        password: acr.listCredentials().passwords[0].value
+      }
+    ]
   }
-}
-
-// Give the App Service access to ACR (optional: if needed for private ACR)
-resource acr 'Microsoft.ContainerRegistry/registries@2022-03-01' existing = {
-  name: acrName
-}
-
-// Assign ACR Pull role to the App Service Managed Identity
-resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-  scope: acr
-  properties: {
-    roleDefinitionId: resourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') // AcrPull role
-    principalId: webApp.identity.principalId
-  }
-  name: guid(webApp.id, acr.id, 'AcrPullRoleAssignment') // Generate a new GUID for the role assignment
 }

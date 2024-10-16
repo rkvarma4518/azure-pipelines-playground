@@ -8,12 +8,12 @@ param location string = resourceGroup().location
 param acrRegistryName string = 'depdocker' // Your ACR registry name
 
 // ACR Resource reference
-resource acr 'Microsoft.ContainerRegistry/registries@2022-12-01' existing = {
+resource acr 'Microsoft.ContainerRegistry/registries@2023-05-01' existing = {
   name: acrRegistryName
 }
 
 // ACI: Azure Container Instance resource
-resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2022-12-01' = {
+resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: containerGroupName
   location: location
   properties: {

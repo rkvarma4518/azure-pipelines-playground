@@ -1,5 +1,5 @@
 // Parameters
-param webAppName string = 'myApiContainer' // Name for your Azure Container App
+param webAppName string = 'myAppContainer' // Name for your Azure Container App
 param imageName string = 'depdocker.azurecr.io/hello-world:latest' // Your ACR image
 param acrRegistryName string = 'depdocker' // Your ACR registry name
 param location string = resourceGroup().location
@@ -12,43 +12,44 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existin
   scope: resourceGroup('deploy') // Ensure this is referencing the correct resource group
 }
 
-// Container App Environment
-resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
+// Define the environment for Container Apps
+resource environment 'Microsoft.App/containerAppsEnvironments@2023-05-01' = {
   name: environmentName
   location: location
+  properties: {
+    // Define any necessary properties for the container apps environment
+    appLogsConfiguration: {
+      logLevel: 'Debug' // Set your log level as needed
+    }
+  }
 }
 
-// Azure Container App resource
-resource apiContainer 'Microsoft.App/containerApps@2024-03-01' = {
+// Define the Container App
+resource appContainer 'Microsoft.App/containerApps@2023-05-01' = {
   name: webAppName
   location: location
   properties: {
-    environmentId: containerAppEnv.id
+    environmentId: environment.id
     configuration: {
       ingress: {
-        external: true
-        targetPort: 8000 // The port your app listens on
+        external: true // Set to true to expose the app to the internet
+        targetPort: 80 // The port your app will listen on
       }
-      revisionCount: 10 // Set the number of revisions to retain
     }
     template: {
       containers: [
         {
           name: webAppName
-          image: imageName // Specify the Docker image
+          image: imageName // Reference the image from ACR
           resources: {
-            cpu: 0.5 // Set CPU allocation
-            memory: '1Gi' // Set memory allocation
+            cpu: 0.5 // Specify CPU requirements
+            memory: '1Gi' // Specify memory requirements
           }
         }
       ]
     }
-    imageRegistryCredentials: [
-      {
-        server: acr.properties.loginServer
-        username: acr.listCredentials().username
-        password: acr.listCredentials().passwords[0].value
-      }
-    ]
   }
 }
+
+// Output the Container App URL
+output appUrl string = 'https://${appContainer.name}.${environment.properties.ingress.fqdn}'

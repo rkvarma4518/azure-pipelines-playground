@@ -14,7 +14,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existin
 }
 
 // ACI: Azure Container Instance resource
-resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2022-12-01' = {
+resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2022-04-01-preview' = {
   name: containerGroupName
   location: location
   properties: {

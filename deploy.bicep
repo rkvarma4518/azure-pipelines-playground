@@ -16,9 +16,6 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existin
 resource containerAppEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: environmentName
   location: location
-  properties: {
-    // Define any properties required for the managed environment
-  }
 }
 
 // Azure Container App resource

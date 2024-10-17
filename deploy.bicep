@@ -9,7 +9,7 @@ param environmentName string = 'myContainerAppEnv' // Name for the Container App
 // ACR Resource reference
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = {
   name: acrRegistryName
-  scope: resourceGroup() // Ensure this is referencing the correct resource group
+  scope: resourceGroup('deploy') // Ensure this is referencing the correct resource group
 }
 
 // Container App Environment

@@ -19,12 +19,13 @@ steps:
 
   - task: AzureCLI@2
     inputs:
-      azureSubscription: 'azure-resource-manager' # Use the Azure Service connection
+      azureSubscription: 'az-resource-manager' # Use the Azure Service connection
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
       inlineScript: |
         echo "Deploying Bicep File..."
+        az group create --name myResourceGroup --location eastus
         az deployment group create \
-          --resource-group deploy \
+          --resource-group myResourceGroup \
           --template-file deploy.bicep \
       workingDirectory: $(System.DefaultWorkingDirectory)

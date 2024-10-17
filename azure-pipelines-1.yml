@@ -24,8 +24,8 @@ steps:
       scriptLocation: 'inlineScript'
       inlineScript: |
         echo "Deploying Bicep File..."
-        az group create --name myResourceGroup --location eastus
+        az group create --name docker --location eastus
         az deployment group create \
-          --resource-group myResourceGroup \
+          --resource-group docker \
           --template-file deploy.bicep \
       workingDirectory: $(System.DefaultWorkingDirectory)

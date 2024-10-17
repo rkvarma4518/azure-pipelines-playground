@@ -1,53 +1,46 @@
-// Parameters
-param webAppName string = 'myAppContainer' // Name for your Azure Container App
 param imageName string = 'depdocker.azurecr.io/hello-world:latest' // Your ACR image
 param acrRegistryName string = 'depdocker' // Your ACR registry name
-param location string = resourceGroup().location
-param environmentName string = 'myContainerAppEnv' // Name for the Container App Environment
+param location string = resourceGroup().location // Location of the resource group
 
-// ACR Resource reference
+// Reference to existing ACR in the 'deploy' resource group
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = {
   name: acrRegistryName
-  scope: resourceGroup('deploy') // Reference the resource group for ACR
+  scope: resourceGroup('deploy') // Specify the correct resource group name
 }
 
-// Define the environment for Container Apps
-resource environment 'Microsoft.App/containerAppsEnvironments@2023-05-01' = {
-  name: environmentName
+// Create a Container App Environment
+resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2022-11-01-preview' = {
+  name: 'myContainerAppEnvironment' // Change to your desired environment name
   location: location
   properties: {
-    appLogsConfiguration: {
-      logLevel: 'Debug' // Set your log level as needed
-    }
+    // Additional configuration for the environment can be added here if needed
   }
 }
 
-// Define the Container App
-resource appContainer 'Microsoft.App/containerApps@2023-05-01' = {
-  name: webAppName
+// Deploy the Container App
+resource apiContainer 'Microsoft.App/containerApps@2024-03-01' = {
+  name: 'hello-world-container' // Change to your Container App name
   location: location
   properties: {
-    environmentId: environment.id
+    managedEnvironmentId: containerAppEnvironment.id
     configuration: {
       ingress: {
-        external: true // Set to true to expose the app to the internet
-        targetPort: 80 // The port your app will listen on
+        external: true
+        targetPort: 80 // Change as per your app's port
+        allowInsecure: false // Change as per your requirement
       }
     }
     template: {
       containers: [
         {
-          name: webAppName
-          image: imageName // Reference the image from ACR
+          name: 'hello-world' // Change this as per your container naming convention
+          image: imageName // Use the provided image name
           resources: {
             cpu: 0.5 // Specify CPU requirements
-            memory: '1Gi' // Specify memory requirements
+            memory: '1Gi' // Specify Memory requirements
           }
         }
       ]
     }
   }
 }
-
-// Output the Container App URL
-output appUrl string = 'https://${appContainer.name}.${environment.properties.ingress.fqdn}'

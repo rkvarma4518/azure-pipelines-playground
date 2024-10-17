@@ -42,8 +42,8 @@ resource apiContainer 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'hello-world' // Change this as per your container naming convention
           image: imageName // Use the provided image name
           resources: {
-            cpu: 0.5 // Specify CPU requirements
-            memory: '1Gi' // Specify Memory requirements
+            cpu: 1 // Specify CPU requirements
+            memory: '2Gi' // Specify Memory requirements
           }
         }
       ]

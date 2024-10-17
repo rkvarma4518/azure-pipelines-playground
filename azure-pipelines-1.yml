@@ -10,13 +10,6 @@ pool:
 steps:
   # Step 1: Checkout the Bicep file from GitHub
   - checkout: self
-
-  # Step 2: Install Azure CLI (if not pre-installed)
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.x'
-      addToPath: true
-
   - task: AzureCLI@2
     inputs:
       azureSubscription: 'az-resource-manager' # Use the Azure Service connection

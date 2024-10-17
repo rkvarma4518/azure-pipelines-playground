@@ -13,7 +13,13 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2022-11-01-p
   name: 'myContainerAppEnvironment' // Change to your desired environment name
   location: location
   properties: {
-    // Additional configuration for the environment can be added here if needed
+    workloadProfiles: [
+      {
+        workloadProfileType: 'Consumption'
+        name: 'Consumption'
+      }
+    ]
+
   }
 }
 

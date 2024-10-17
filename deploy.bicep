@@ -1,54 +1,54 @@
+// Parameters
+param containerGroupName string = 'myContainerGroup'
+param containerName string = 'my-container'
 param imageName string = 'depdocker.azurecr.io/hello-world:latest' // Your ACR image
+param cpuCores int = 1
+param memoryGb int = 2 // Use int for memory size
+param location string = resourceGroup().location
 param acrRegistryName string = 'depdocker' // Your ACR registry name
-param location string = resourceGroup().location // Location of the resource group
 
-// Reference to existing ACR in the 'deploy' resource group
+// ACR Resource reference
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = {
   name: acrRegistryName
-  scope: resourceGroup('deploy') // Specify the correct resource group name
+  scope: resourceGroup('deploy')
 }
 
-// Create a Container App Environment
-resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2022-11-01-preview' = {
-  name: 'myContainerAppEnvironment' // Change to your desired environment name
+// ACI: Azure Container Instance resource
+resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2022-04-01-preview' = {
+  name: containerGroupName
   location: location
   properties: {
-    workloadProfiles: [
+    containers: [
       {
-        workloadProfileType: 'Consumption'
-        name: 'Consumption'
+        name: containerName
+        properties: {
+          image: imageName // Full path to the image in ACR
+          resources: {
+            requests: {
+              cpu: cpuCores
+              memoryInGb: memoryGb
+            }
+          }
+          ports: [
+            {
+              protocol: 'TCP'
+              port: 80 // The port the container will listen on
+            }
+          ]
+        }
       }
     ]
-
-  }
-}
-
-// Deploy the Container App
-resource apiContainer 'Microsoft.App/containerApps@2024-03-01' = {
-  name: 'hello-world-container'
-  location: location
-  properties: {
-    managedEnvironmentId: containerAppEnvironment.id
-    configuration: {
-      ingress: {
-        external: true
-        targetPort: 80
-        allowInsecure: false
-      }
-    }
-    template: {
-      containers: [
+    osType: 'Linux'
+    ipAddress: {
+      type: 'Public'
+      ports: [
         {
-          name: 'hello-world'
-          image: imageName
-          resources: {
-            cpu: 1
-            memory: '2Gi'
-          }
+          protocol: 'TCP'
+          port: 80
         }
       ]
+      dnsNameLabel: uniqueString(resourceGroup().id)
     }
-    // Move imageRegistryCredentials here
     imageRegistryCredentials: [
       {
         server: acr.properties.loginServer
@@ -58,4 +58,3 @@ resource apiContainer 'Microsoft.App/containerApps@2024-03-01' = {
     ]
   }
 }
-

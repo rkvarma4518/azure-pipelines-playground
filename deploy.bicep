@@ -4,12 +4,12 @@ param imageName string = 'depdocker.azurecr.io/hello-world:latest' // Your ACR i
 param acrRegistryName string = 'depdocker' // Your ACR registry name
 param location string = resourceGroup().location
 param appServicePlanName string = '${webAppName}-plan'
-param appServiceSku3 sku = {
-  name: 'S1' // Example SKU, adjust as needed
-  tier: 'Standard'
-  size: 'S1'
-  capacity: 1
+
+// App Service Plan SKU
+param appServiceSku3 object = {
+  name: 'EP3'
 }
+
 
 // ACR Resource reference
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = {
@@ -45,15 +45,6 @@ resource appContainer 'Microsoft.Web/sites@2022-03-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
-    containerSettings: {
-      image: imageName
-      registry: {
-        server: acr.properties.loginServer
-        username: acr.listCredentials().username
-        password: acr.listCredentials().passwords[0].value
-      }
-    }
-    // Set the container port to 8000
     siteConfig: {
       linuxFxVersion: 'DOCKER|${imageName}' // Specify the Docker image
       appSettings: [

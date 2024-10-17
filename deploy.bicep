@@ -1,11 +1,15 @@
 // Parameters
-param containerGroupName string = 'myContainerGroup'
-param containerName string = 'my-container'
+param webAppName string = 'myWebApp' // Name for your Azure Web App
 param imageName string = 'depdocker.azurecr.io/hello-world:latest' // Your ACR image
-param cpuCores int = 1
-param memoryGb int = 2 // Use int for memory size
-param location string = resourceGroup().location
 param acrRegistryName string = 'depdocker' // Your ACR registry name
+param location string = resourceGroup().location
+param appServicePlanName string = '${webAppName}-plan'
+param appServiceSku3 sku = {
+  name: 'S1' // Example SKU, adjust as needed
+  tier: 'Standard'
+  size: 'S1'
+  capacity: 1
+}
 
 // ACR Resource reference
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = {
@@ -13,48 +17,51 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existin
   scope: resourceGroup('deploy')
 }
 
-// ACI: Azure Container Instance resource
-resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2022-04-01-preview' = {
-  name: containerGroupName
+// App Service Plan for the Web App
+resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
+  name: appServicePlanName
   location: location
+  sku: appServiceSku3
+  kind: 'elastic,linux'
   properties: {
-    containers: [
-      {
-        name: containerName
-        properties: {
-          image: imageName // Full path to the image in ACR
-          resources: {
-            requests: {
-              cpu: cpuCores
-              memoryInGb: memoryGb
-            }
-          }
-          ports: [
-            {
-              protocol: 'TCP'
-              port: 80 // The port the container will listen on
-            }
-          ]
-        }
-      }
-    ]
-    osType: 'Linux'
-    ipAddress: {
-      type: 'Public'
-      ports: [
-        {
-          protocol: 'TCP'
-          port: 80
-        }
-      ]
-      dnsNameLabel: uniqueString(resourceGroup().id)
-    }
-    imageRegistryCredentials: [
-      {
+    reserved: true
+    perSiteScaling: false
+    elasticScaleEnabled: false
+    maximumElasticWorkerCount: 10
+    isSpot: false
+    isXenon: false
+    hyperV: false
+    targetWorkerCount: 0
+    targetWorkerSizeId: 0
+    zoneRedundant: false
+  }
+}
+
+// Azure Web App resource
+resource appContainer 'Microsoft.Web/sites@2022-03-01' = {
+  name: webAppName
+  location: location
+  kind: 'app'
+  properties: {
+    serverFarmId: appServicePlan.id
+    httpsOnly: true
+    containerSettings: {
+      image: imageName
+      registry: {
         server: acr.properties.loginServer
         username: acr.listCredentials().username
         password: acr.listCredentials().passwords[0].value
       }
-    ]
+    }
+    // Set the container port to 8000
+    siteConfig: {
+      linuxFxVersion: 'DOCKER|${imageName}' // Specify the Docker image
+      appSettings: [
+        {
+          name: 'WEBSITES_PORT'
+          value: '8000' // Specify the port your app listens on
+        }
+      ]
+    }
   }
 }

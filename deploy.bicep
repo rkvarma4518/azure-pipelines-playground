@@ -47,6 +47,13 @@ resource apiContainer 'Microsoft.App/containerApps@2024-03-01' = {
           }
         }
       ]
+      imageRegistryCredentials: [
+        {
+          server: acr.properties.loginServer
+          username: acr.listCredentials().username
+          password: acr.listCredentials().passwords[0].value
+        }
+      ]
     }
   }
 }

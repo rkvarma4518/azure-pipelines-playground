@@ -25,35 +25,37 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2022-11-01-p
 
 // Deploy the Container App
 resource apiContainer 'Microsoft.App/containerApps@2024-03-01' = {
-  name: 'hello-world-container' // Change to your Container App name
+  name: 'hello-world-container'
   location: location
   properties: {
     managedEnvironmentId: containerAppEnvironment.id
     configuration: {
       ingress: {
         external: true
-        targetPort: 80 // Change as per your app's port
-        allowInsecure: false // Change as per your requirement
+        targetPort: 80
+        allowInsecure: false
       }
     }
     template: {
       containers: [
         {
-          name: 'hello-world' // Change this as per your container naming convention
-          image: imageName // Use the provided image name
+          name: 'hello-world'
+          image: imageName
           resources: {
-            cpu: 1 // Specify CPU requirements
-            memory: '2Gi' // Specify Memory requirements
+            cpu: 1
+            memory: '2Gi'
           }
         }
       ]
-      imageRegistryCredentials: [
-        {
-          server: acr.properties.loginServer
-          username: acr.listCredentials().username
-          password: acr.listCredentials().passwords[0].value
-        }
-      ]
     }
+    // Move imageRegistryCredentials here
+    imageRegistryCredentials: [
+      {
+        server: acr.properties.loginServer
+        username: acr.listCredentials().username
+        password: acr.listCredentials().passwords[0].value
+      }
+    ]
   }
 }
+

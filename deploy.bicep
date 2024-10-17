@@ -10,6 +10,7 @@ param acrRegistryName string = 'depdocker' // Your ACR registry name
 // ACR Resource reference
 resource acr 'Microsoft.ContainerRegistry/registries@2023-05-01' existing = {
   name: acrRegistryName
+  scope: resourceGroup('deploy')
 }
 
 // ACI: Azure Container Instance resource

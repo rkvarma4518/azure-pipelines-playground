@@ -1,17 +1,11 @@
 trigger:
-- main  # Change this to the branch you want to trigger the pipeline
+- dev  # Change this to the branch you want to trigger the pipeline
 
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
 - group: variable_group
-# variables:
-#   dockerHubServiceConnection: 'dockerhub'  # Name of your DockerHub service connection
-#   ACRServiceConnection: 'azure-registry'  # Name of your ACR service connection
-#   azureRegistry: 'depdocker'              # Replace with your Azure Container Registry name
-#   imageName: 'hello-world'                           # Docker image name from DockerHub (e.g., 'nginx')
-#   imageVersion: 'latest'                                   # Docker image version/tag from DockerHub (e.g., 'latest')
 
 steps:
 # Step 1: Log in to DockerHub (using the service connection you created)

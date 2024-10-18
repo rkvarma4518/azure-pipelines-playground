@@ -7,6 +7,9 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest' # Use a VM to run the steps
 
+variables:
+- group: variable_group
+
 steps:
   # Step 1: Checkout the Bicep file from GitHub
   - checkout: self

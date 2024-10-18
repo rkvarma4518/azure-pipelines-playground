@@ -2,7 +2,7 @@
 trigger:
   branches:
     include:
-      - main # Trigger on changes to the main branch (or any branch you prefer)
+      - dev # Trigger on changes to the main branch (or any branch you prefer)
 
 pool:
   vmImage: 'ubuntu-latest' # Use a VM to run the steps
@@ -17,8 +17,8 @@ steps:
       scriptLocation: 'inlineScript'
       inlineScript: |
         echo "Deploying Bicep File..."
-        az group create --name docker --location eastus
+        az group create --name newResourceGroup --location eastus
         az deployment group create \
-          --resource-group docker \
+          --resource-group newResourceGroup \
           --template-file deploy.bicep \
       workingDirectory: $(System.DefaultWorkingDirectory)

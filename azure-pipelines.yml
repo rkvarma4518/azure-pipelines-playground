@@ -7,7 +7,7 @@ variables:
 - group: variable_group
 
 steps:
-# Step 1: Log in to DockerHub (using the service connection you created)
+# Step 1: Log in to DockerHub (using the service connection you creat)
 - task: Docker@2
   inputs:
     containerRegistry: '$(dockerHubServiceConnection)'  # This is your DockerHub service connection

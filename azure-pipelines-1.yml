@@ -18,7 +18,6 @@ steps:
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
       inlineScript: |
-        echo "Deploying Bicep File..."
         az group create --name newResourceGroup --location eastus
         az deployment group create \
           --resource-group newResourceGroup \

@@ -2,6 +2,11 @@ trigger:
   branches:
     include:
       - dev # Trigger on changes to the main branch (or any branch you prefer)
+resources:
+  pipelines:
+    - pipeline: pull-push-image
+      source: 'pull-push-image'
+      trigger: true
 
 pool:
   vmImage: 'ubuntu-latest' # Use a VM to run the steps

@@ -24,7 +24,7 @@ steps:
 - task: Docker@2
   inputs:
     containerRegistry: '$(ACRServiceConnection)'  # Name of the ACR service connection
-    
+    command: 'login'
 
 # Step 4: Push the image to Azure Container Registry (ACR)
 - task: Docker@2

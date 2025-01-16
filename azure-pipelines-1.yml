@@ -27,7 +27,5 @@ steps:
         az deployment group create \
           --resource-group newResourceGroup \
           --template-file deploy.bicep \
-          --parameters \
-              containerGroupName=$(containerGroupName) \
-              containerName=$(containerName )
+          --parameters containerGroupName=$(containerGroupName) containerName=$(containerName )
       workingDirectory: $(System.DefaultWorkingDirectory)

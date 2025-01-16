@@ -15,7 +15,7 @@ output containerName string = containerName
 // ACR Resource reference
 resource acr 'Microsoft.ContainerRegistry/registries@2023-01-01-preview' existing = {
   name: acrRegistryName
-  scope: resourceGroup('deploy')
+  scope: resourceGroup('newResourceGroup')
 }
 
 // ACI: Azure Container Instance resource

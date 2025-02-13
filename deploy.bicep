@@ -7,7 +7,7 @@ param imageName string = 'depdocker.azurecr.io/hello-world:latest' // Your ACR i
 param cpuCores int = 1
 param memoryGb int = 2 // Use int for memory size
 param location string = resourceGroup().location
-param acrRegistryName string = 'depdocker' // Your ACR registry name
+param acrRegistryName string = 'devdoc' // Your ACR registry name
 
 output containerGroupName string = containerGroupName
 output containerName string = containerName

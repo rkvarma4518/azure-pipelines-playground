@@ -23,9 +23,8 @@ steps:
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
       inlineScript: |
-        az group create --name newResourceGroup --location eastus
         az deployment group create \
-          --resource-group newResourceGroup \
+          --resource-group learning \
           --template-file deploy.bicep \
           --parameters containerGroupName=$(containerGroupName) containerName=$(containerName )
       workingDirectory: $(System.DefaultWorkingDirectory)

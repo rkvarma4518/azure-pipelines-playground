@@ -26,7 +26,6 @@ steps:
         az deployment group create \
           --resource-group learning \
           --template-file deploy.bicep \
-          --parameters \
-            containerGroupName=$(containerGroupName) \
-            containerName=$(containerName) \
+          --parameters containerGroupName=$(containerGroupName) \
+          --parameters containerName=$(containerName)
       workingDirectory: $(System.DefaultWorkingDirectory)

@@ -24,12 +24,10 @@ steps:
       scriptLocation: 'inlineScript'
       inlineScript: |
         echo "Starting Bicep deployment..."
-        output=$(az deployment group create \
+        az deployment group create \
           --resource-group learning \
           --template-file deploy.bicep \
           --parameters containerGroupName=$(containerGroupName) \
           --parameters containerName=$(containerName) \
-          --output json)
-        echo "Deployment output:"
-        echo "$output"
+
       workingDirectory: $(System.DefaultWorkingDirectory)

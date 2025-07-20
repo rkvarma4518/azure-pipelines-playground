@@ -4,9 +4,9 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-- group: variable_group  # includes imageName, imageVersion, dockerHubServiceConnection, ACRServiceConnection, azureRegistry
+- group: variable_group  # This group must include the values below
 
-# Define additional tags
+# Additional tags you want to push the same image with
 - name: imageTags
   value: |
     latest
@@ -16,37 +16,39 @@ variables:
     production
 
 steps:
-# Step 1: DockerHub login
+# Step 1: Login to DockerHub
 - task: Docker@2
   inputs:
     containerRegistry: '$(dockerHubServiceConnection)'
     command: 'login'
+  displayName: 'Login to DockerHub'
 
-# Step 2: Pull image from DockerHub and tag with ACR name
+# Step 2: Pull image from DockerHub and tag with base ACR tag
 - script: |
     docker pull $(imageName):$(imageVersion)
     docker tag $(imageName):$(imageVersion) $(azureRegistry).azurecr.io/$(imageName):$(imageVersion)
-  displayName: 'Pull and Tag Image with Base Tag'
+  displayName: 'Pull and Tag Base Image'
 
-# Step 3: Add additional tags
+# Step 3: Tag image with additional tags for ACR
 - script: |
-    for tag in $(imageTags)
-    do
+    echo "Tagging image with additional tags..."
+    echo "$(imageTags)" | while read tag; do
       docker tag $(imageName):$(imageVersion) $(azureRegistry).azurecr.io/$(imageName):$tag
     done
     docker images
   displayName: 'Add Multiple Tags'
 
-# Step 4: Login to ACR
+# Step 4: Login to Azure Container Registry (ACR)
 - task: Docker@2
   inputs:
     containerRegistry: '$(ACRServiceConnection)'
     command: 'login'
+  displayName: 'Login to ACR'
 
 # Step 5: Push all tags to ACR
 - script: |
-    for tag in $(imageTags)
-    do
+    echo "Pushing all tags to ACR..."
+    echo "$(imageTags)" | while read tag; do
       docker push $(azureRegistry).azurecr.io/$(imageName):$tag
     done
   displayName: 'Push All Tags to ACR'

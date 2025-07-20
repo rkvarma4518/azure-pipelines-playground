@@ -49,6 +49,8 @@ steps:
 - script: |
     echo "Pushing all tags to ACR..."
     echo "$(imageTags)" | while read tag; do
-      docker push $(azureRegistry).azurecr.io/$(imageName):$tag
+      if [ -n "$tag" ]; then
+        docker push $(azureRegistry).azurecr.io/$(imageName):$tag
+      fi
     done
   displayName: 'Push All Tags to ACR'

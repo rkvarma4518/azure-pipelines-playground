@@ -13,35 +13,51 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      echo "Fetching image tags for $imageName in ACR $azureRegistry..."
+      echo "🔍 Fetching image tags for repository: $REPOSITORY in ACR: $ACR_NAME"
 
-      # Get the full list of image tags with metadata (creationTime)
-      image_tags=$(az acr repository show-manifests \
-          --name $azureRegistry \
-          --repository $imageName \
-          --output json | jq -r 'sort_by(.timestamp) | .[].digest')
+      # Get all tags with their last update timestamp
+      tags=$(az acr repository show-tags \
+        --name $ACR_NAME \
+        --repository $REPOSITORY \
+        --detail \
+        --output json | jq -r '.[] | {name: .name, timestamp: .lastUpdateTime} | @base64')
 
-      echo "Image digests:"
-      echo "$image_tags"
+      # Sort and prepare tag:timestamp pairs
+      sorted_list=$(echo "$tags" | while read tag; do
+        echo $tag | base64 --decode | jq -r '[.timestamp, .name] | @tsv'
+      done | sort)
 
-      # Count total number of tags
-      total=$(echo "$image_tags" | wc -l)
-      echo "Total images: $total"
+      echo "📋 List of tags with timestamps (oldest to newest):"
+      echo "$sorted_list" | column -t
 
-      # If more than 3 images, delete the older ones
+      # Extract only tag names (sorted)
+      sorted_tags=$(echo "$sorted_list" | awk '{print $2}')
+      total=$(echo "$sorted_tags" | wc -l)
+
+      echo "🔢 Total tags found: $total"
+
       if [ "$total" -gt 3 ]; then
         delete_count=$((total - 3))
-        to_delete=$(echo "$image_tags" | head -n $delete_count)
+        to_delete=$(echo "$sorted_tags" | head -n $delete_count)
+        to_keep=$(echo "$sorted_tags" | tail -n 3)
 
-        for digest in $to_delete; do
-          echo "Deleting: $digest"
+        echo "🗑️ Tags to be deleted:"
+        echo "$to_delete" | sed 's/^/  - /'
+
+        for tag in $to_delete; do
+          echo "Deleting tag: $tag"
           az acr repository delete \
-            --name $azureRegistry \
-            --repository $imageName \
-            --manifest $digest \
+            --name $ACR_NAME \
+            --repository $REPOSITORY \
+            --tag $tag \
             --yes
         done
+
+        echo "✅ Remaining tags after cleanup:"
+        echo "$to_keep" | sed 's/^/  - /'
       else
-        echo "Only $total images found. No deletion required."
+        echo "ℹ️ No deletion needed. Only $total tags present."
+        echo "🟢 Current tags:"
+        echo "$sorted_tags" | sed 's/^/  - /'
       fi
-  displayName: 'Delete older images in ACR'
+  displayName: 'Keep latest 3 tags, delete older ones with info'

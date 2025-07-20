@@ -48,8 +48,7 @@ steps:
           echo "Deleting tag: $tag"
           az acr repository delete \
             --name $ACR_NAME \
-            --repository $REPOSITORY \
-            --tag $tag \
+            --image $REPOSITORY:$tag \
             --yes
         done
 

@@ -1,0 +1,47 @@
+trigger: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+- group: variable_group  # This group must include the values below
+
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: '$(AZServiceSub)'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Fetching image tags for $imageName in ACR $azureRegistry..."
+
+      # Get the full list of image tags with metadata (creationTime)
+      image_tags=$(az acr repository show-manifests \
+          --name $azureRegistry \
+          --repository $imageName \
+          --output json | jq -r 'sort_by(.timestamp) | .[].digest')
+
+      echo "Image digests:"
+      echo "$image_tags"
+
+      # Count total number of tags
+      total=$(echo "$image_tags" | wc -l)
+      echo "Total images: $total"
+
+      # If more than 3 images, delete the older ones
+      if [ "$total" -gt 3 ]; then
+        delete_count=$((total - 3))
+        to_delete=$(echo "$image_tags" | head -n $delete_count)
+
+        for digest in $to_delete; do
+          echo "Deleting: $digest"
+          az acr repository delete \
+            --name $azureRegistry \
+            --repository $imageName \
+            --manifest $digest \
+            --yes
+        done
+      else
+        echo "Only $total images found. No deletion required."
+      fi
+  displayName: 'Delete older images in ACR'

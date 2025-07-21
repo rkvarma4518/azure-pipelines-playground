@@ -15,7 +15,7 @@ steps:
     inlineScript: |
       echo "🔍 Fetching repositories from ACR: '$(azureRegistry)'..."
       
-      if [ -z "'$(azureRegistry)'" ]; then
+      if [ -z "$(azureRegistry)" ]; then
         echo "❌ ERROR: azureRegistry variable is not set."
         exit 1
       fi

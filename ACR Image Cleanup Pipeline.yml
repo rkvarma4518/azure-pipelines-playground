@@ -75,8 +75,9 @@ steps:
       # Delete repositories other than latest 3
       for repo in "${delete_repos[@]}"; do
         echo "Deleting repository: $repo"
-        az acr repository delete --name '$(azureRegistry)' --repository "$repo" --yes --no-wait
+        az acr repository delete --name '$(azureRegistry)' --repository "$repo" --yes
       done
+
 
       echo ""
       echo "✅ Cleanup complete."

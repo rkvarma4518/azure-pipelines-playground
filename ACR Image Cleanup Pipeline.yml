@@ -13,32 +13,44 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      echo "🔍 Fetching repositories from ACR: '$(azureRegistry)'..."
+      echo "🔍 Fetching repositories from ACR: '$azureRegistry'..."
+      
+      if [ -z "$azureRegistry" ]; then
+        echo "❌ ERROR: azureRegistry variable is not set."
+        exit 1
+      fi
 
-      repositories=$(az acr repository list --name '$(azureRegistry)' --output tsv)
+      repositories=$(az acr repository list --name $azureRegistry --output tsv)
 
       for repo in $repositories; do
         echo ""
         echo "📦 Processing repository: $repo"
 
-        # Get all manifests with digest and timestamp, sorted by timestamp descending (newest first)
+        # Fetch all manifests with digest, timestamp, and tags (if any)
         manifests=$(az acr repository show-manifests \
-          --name '$(azureRegistry)' \
+          --name $azureRegistry \
           --repository $repo \
-          --output json | jq -r 'sort_by(.timestamp) | reverse | .[] | "\(.digest) \(.timestamp)"')
+          --output json | jq -r '
+            sort_by(.timestamp) | reverse |
+            .[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"')
 
         total=$(echo "$manifests" | wc -l)
         echo "Total images found: $total"
         echo ""
         echo "🧾 All images (latest first):"
-        echo "$manifests"
+        printf "%-70s | %-30s | %s\n" "Digest" "Timestamp" "Tags"
+        printf -- "-----------------------------------------------------------------------------------------------------------------\n"
+        echo "$manifests" | while read -r digest timestamp tag; do
+          printf "%-70s | %-30s | %s\n" "$digest" "$timestamp" "$tag"
+        done
 
         if [ "$total" -le 3 ]; then
-          echo "✅ $total image(s) only. No deletion needed."
+          echo ""
+          echo "✅ Only $total image(s) found. No deletion required."
           continue
         fi
 
-        # Convert manifests to array
+        # Convert all manifest lines into an array
         mapfile -t manifest_lines <<< "$manifests"
 
         echo ""
@@ -47,10 +59,11 @@ steps:
           line="${manifest_lines[$i]}"
           digest=$(echo "$line" | awk '{print $1}')
           timestamp=$(echo "$line" | awk '{print $2}')
+          tag=$(echo "$line" | cut -d' ' -f3-)
 
-          echo "Deleting: Digest=$digest, Timestamp=$timestamp"
+          echo "Deleting: Digest=$digest | Timestamp=$timestamp | Tags=$tag"
           az acr repository delete \
-            --name '$(azureRegistry)' \
+            --name $azureRegistry \
             --repository $repo \
             --manifest $digest \
             --yes
@@ -58,8 +71,14 @@ steps:
 
         echo ""
         echo "✅ Remaining (latest 3) images:"
+        printf "%-70s | %-30s | %s\n" "Digest" "Timestamp" "Tags"
+        printf -- "-----------------------------------------------------------------------------------------------------------------\n"
         for ((i=0; i<3; i++)); do
-          echo "${manifest_lines[$i]}"
+          line="${manifest_lines[$i]}"
+          digest=$(echo "$line" | awk '{print $1}')
+          timestamp=$(echo "$line" | awk '{print $2}')
+          tag=$(echo "$line" | cut -d' ' -f3-)
+          printf "%-70s | %-30s | %s\n" "$digest" "$timestamp" "$tag"
         done
       done
   displayName: 'ACR Cleanup: Keep latest 3 image digests per repository'

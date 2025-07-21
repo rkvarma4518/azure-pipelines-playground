@@ -13,14 +13,14 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      echo "🔍 Fetching repositories from ACR: '$azureRegistry'..."
+      echo "🔍 Fetching repositories from ACR: '$(azureRegistry)'..."
       
-      if [ -z "$azureRegistry" ]; then
+      if [ -z "'$(azureRegistry)'" ]; then
         echo "❌ ERROR: azureRegistry variable is not set."
         exit 1
       fi
 
-      repositories=$(az acr repository list --name $azureRegistry --output tsv)
+      repositories=$(az acr repository list --name '$(azureRegistry)' --output tsv)
 
       for repo in $repositories; do
         echo ""
@@ -28,7 +28,7 @@ steps:
 
         # Fetch all manifests with digest, timestamp, and tags (if any)
         manifests=$(az acr repository show-manifests \
-          --name $azureRegistry \
+          --name '$(azureRegistry)' \
           --repository $repo \
           --output json | jq -r '
             sort_by(.timestamp) | reverse |
@@ -63,7 +63,7 @@ steps:
 
           echo "Deleting: Digest=$digest | Timestamp=$timestamp | Tags=$tag"
           az acr repository delete \
-            --name $azureRegistry \
+            --name '$(azureRegistry)' \
             --repository $repo \
             --manifest $digest \
             --yes

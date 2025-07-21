@@ -9,9 +9,9 @@ variables:
 # List of target image names (in ACR) to push with the same tag
 - name: acrImageNames
   value: |
-    newrepo1/imageA
-    newrepo2/imageB
-    projectX/myapp
+    newrepo1/imagea
+    newrepo2/imageb
+    project/myapp
 
 steps:
 # Step 1: Login to DockerHub

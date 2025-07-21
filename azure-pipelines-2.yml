@@ -9,8 +9,8 @@ variables:
 # List of target image names (in ACR) to push with the same tag
 - name: acrImageNames
   value: |
-    newrepo1/imagea1
-    newrepo2/imageb1
+    newrepo1/imagea
+    newrepo2/imageb
     project/myapp
 
 steps:

@@ -6,14 +6,14 @@ pool:
 variables:
 - group: variable_group  # This group must include the values below
 
-# Additional tags you want to push the same image with
-- name: imageTags
+# List of different image names you want to push as (repository names)
+- name: imageNames
   value: |
-    latest
-    v1
-    v1.0
-    stable
-    production
+    app1
+    app2
+    app3
+    backend
+    frontend
 
 steps:
 # Step 1: Login to DockerHub
@@ -23,20 +23,21 @@ steps:
     command: 'login'
   displayName: 'Login to DockerHub'
 
-# Step 2: Pull image from DockerHub and tag with base ACR tag
+# Step 2: Pull base image from DockerHub
 - script: |
-    docker pull rkvarma4518/dep-docker:$(imageVersion)
-    docker tag rkvarma4518/dep-docker:$(imageVersion) $(azureRegistry).azurecr.io/$(imageName):$(imageVersion)
-  displayName: 'Pull and Tag Base Image'
+    docker pull $(imageName):$(imageVersion)
+  displayName: 'Pull Base Image'
 
-# Step 3: Tag image with additional tags for ACR
+# Step 3: Tag image with different image names (repositories) in ACR
 - script: |
-    echo "Tagging image with additional tags..."
-    echo "$(imageTags)" | while read tag; do
-      docker tag rkvarma4518/dep-docker:$(imageVersion) $(azureRegistry).azurecr.io/$(imageName):$tag
+    echo "Tagging image with different names..."
+    echo "$(imageNames)" | while read newName; do
+      if [ -n "$newName" ]; then
+        docker tag $(imageName):$(imageVersion) $(azureRegistry).azurecr.io/$newName:$(imageVersion)
+      fi
     done
     docker images
-  displayName: 'Add Multiple Tags'
+  displayName: 'Tag Image with Different Names'
 
 # Step 4: Login to Azure Container Registry (ACR)
 - task: Docker@2
@@ -45,12 +46,12 @@ steps:
     command: 'login'
   displayName: 'Login to ACR'
 
-# Step 5: Push all tags to ACR
+# Step 5: Push all differently named images to ACR
 - script: |
-    echo "Pushing all tags to ACR..."
-    echo "$(imageTags)" | while read tag; do
-      if [ -n "$tag" ]; then
-        docker push $(azureRegistry).azurecr.io/$(imageName):$tag
+    echo "Pushing all images to ACR..."
+    echo "$(imageNames)" | while read newName; do
+      if [ -n "$newName" ]; then
+        docker push $(azureRegistry).azurecr.io/$newName:$(imageVersion)
       fi
     done
-  displayName: 'Push All Tags to ACR'
+  displayName: 'Push Images with Different Names to ACR'

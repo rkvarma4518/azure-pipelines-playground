@@ -4,7 +4,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-- group: variable_group  # This group must include the values below
+- group: variable_group  # Must include AZServiceSub, azureRegistry
 
 steps:
 - task: AzureCLI@2
@@ -13,35 +13,53 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      echo "Fetching image tags for $imageName in ACR $azureRegistry..."
+      echo "🔍 Fetching repositories from ACR: $azureRegistry..."
 
-      # Get the full list of image tags with metadata (creationTime)
-      image_tags=$(az acr repository show-manifests \
+      repositories=$(az acr repository list --name $azureRegistry --output tsv)
+
+      for repo in $repositories; do
+        echo ""
+        echo "📦 Processing repository: $repo"
+
+        # Get all manifests with digest and timestamp, sorted by timestamp descending (newest first)
+        manifests=$(az acr repository show-manifests \
           --name $azureRegistry \
-          --repository $imageName \
-          --output json | jq -r 'sort_by(.timestamp) | .[].digest')
+          --repository $repo \
+          --output json | jq -r 'sort_by(.timestamp) | reverse | .[] | "\(.digest) \(.timestamp)"')
 
-      echo "Image digests:"
-      echo "$image_tags"
+        total=$(echo "$manifests" | wc -l)
+        echo "Total images found: $total"
+        echo ""
+        echo "🧾 All images (latest first):"
+        echo "$manifests"
 
-      # Count total number of tags
-      total=$(echo "$image_tags" | wc -l)
-      echo "Total images: $total"
+        if [ "$total" -le 3 ]; then
+          echo "✅ $total image(s) only. No deletion needed."
+          continue
+        fi
 
-      # If more than 3 images, delete the older ones
-      if [ "$total" -gt 3 ]; then
-        delete_count=$((total - 3))
-        to_delete=$(echo "$image_tags" | head -n $delete_count)
+        # Convert manifests to array
+        mapfile -t manifest_lines <<< "$manifests"
 
-        for digest in $to_delete; do
-          echo "Deleting: $digest"
+        echo ""
+        echo "🗑️ Dropping older images:"
+        for ((i=3; i<${#manifest_lines[@]}; i++)); do
+          line="${manifest_lines[$i]}"
+          digest=$(echo "$line" | awk '{print $1}')
+          timestamp=$(echo "$line" | awk '{print $2}')
+
+          echo "Deleting: Digest=$digest, Timestamp=$timestamp"
           az acr repository delete \
             --name $azureRegistry \
-            --repository $imageName \
+            --repository $repo \
             --manifest $digest \
             --yes
         done
-      else
-        echo "Only $total images found. No deletion required."
-      fi
-  displayName: 'Delete older images in ACR'
+
+        echo ""
+        echo "✅ Remaining (latest 3) images:"
+        for ((i=0; i<3; i++)); do
+          echo "${manifest_lines[$i]}"
+        done
+      done
+  displayName: 'ACR Cleanup: Keep latest 3 image digests per repository'

@@ -13,9 +13,9 @@ steps:
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      echo "🔍 Fetching repositories from ACR: $azureRegistry..."
+      echo "🔍 Fetching repositories from ACR: '$(azureRegistry)'..."
 
-      repositories=$(az acr repository list --name $azureRegistry --output tsv)
+      repositories=$(az acr repository list --name '$(azureRegistry)' --output tsv)
 
       for repo in $repositories; do
         echo ""
@@ -23,7 +23,7 @@ steps:
 
         # Get all manifests with digest and timestamp, sorted by timestamp descending (newest first)
         manifests=$(az acr repository show-manifests \
-          --name $azureRegistry \
+          --name '$(azureRegistry)' \
           --repository $repo \
           --output json | jq -r 'sort_by(.timestamp) | reverse | .[] | "\(.digest) \(.timestamp)"')
 
@@ -50,7 +50,7 @@ steps:
 
           echo "Deleting: Digest=$digest, Timestamp=$timestamp"
           az acr repository delete \
-            --name $azureRegistry \
+            --name '$(azureRegistry)' \
             --repository $repo \
             --manifest $digest \
             --yes

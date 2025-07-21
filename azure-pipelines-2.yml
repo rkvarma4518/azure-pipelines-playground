@@ -25,15 +25,15 @@ steps:
 
 # Step 2: Pull image from DockerHub and tag with base ACR tag
 - script: |
-    docker pull $(imageName):$(imageVersion)
-    docker tag $(imageName):$(imageVersion) $(azureRegistry).azurecr.io/$(imageName):$(imageVersion)
+    docker pull dep-docker:$(imageVersion)
+    docker tag dep-docker:$(imageVersion) $(azureRegistry).azurecr.io/$(imageName):$(imageVersion)
   displayName: 'Pull and Tag Base Image'
 
 # Step 3: Tag image with additional tags for ACR
 - script: |
     echo "Tagging image with additional tags..."
     echo "$(imageTags)" | while read tag; do
-      docker tag $(imageName):$(imageVersion) $(azureRegistry).azurecr.io/$(imageName):$tag
+      docker tag dep-docker:$(imageVersion) $(azureRegistry).azurecr.io/$(imageName):$tag
     done
     docker images
   displayName: 'Add Multiple Tags'

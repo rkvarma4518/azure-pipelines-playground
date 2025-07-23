@@ -26,8 +26,8 @@ steps:
         #   --repository $repo \
         #   --output json)
         images=$(az acr manifest list-metadata \
-          --name '$(azureRegistry)' \
-          --repository $repo \
+          --name $repo \
+          --registry '$(azureRegistry)' \
           --output json)
 
         sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')

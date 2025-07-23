@@ -22,23 +22,20 @@ steps:
         echo "📦 Processing repository: $repo"
 
         # Fetch all manifests with digest, timestamp, and tags (if any)
-        manifests=$(az acr repository show-manifests \
+        images=$(az acr repository show-manifests \
           --name '$(azureRegistry)' \
           --repository $repo \
           --output json | jq -r '
             sort_by(.timestamp) | reverse |
             .[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"')
 
-        total=$(echo "$manifests" | wc -l)
-        echo "Total images found: $total"
+        total=$(echo "$images" | wc -l)
+        echo "🔢 Total images: $total"
 
 
 
-        echo "Images: $manifests"
+        echo "Images: $images"
         # images=$(az acr manifest list-metadata --name "$(azureRegistry)" --repository "$repo" --orderby time_desc --output json)
-
-        total_images=$(echo "$images" | jq length)
-        echo "🔢 Total images: $total_images"
 
         if (( total_images > 3 )); then
           digests_to_delete=$(echo "$images" | jq -r '.[3:][] | .digest')

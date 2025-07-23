@@ -4,99 +4,38 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-- group: variable_group  # Must include: azureRegistry, AZServiceSub, cleanupRepos
+- group: variable_group  # Must include azureRegistry, cleanupRepos, AZServiceSub
 
 steps:
 - task: AzureCLI@2
-  displayName: 'ACR Cleanup: Keep latest 3 images with tags per repository'
+  displayName: Cleanup ACR Images
   inputs:
     azureSubscription: '$(AZServiceSub)'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      echo "🔧 Starting Azure Container Registry image cleanup"
-      echo ""
+      echo "🧹 Starting cleanup for ACR: $(azureRegistry)"
 
-      if [ -z "$(azureRegistry)" ]; then
-        echo "❌ ERROR: 'azureRegistry' variable is not set."
-        exit 1
-      fi
+      IFS=$'\n' read -rd '' -a repos <<< "$(echo "$(cleanupRepos)")"
 
-      IFS=$'\n' read -rd '' -a target_repos <<< "$(echo '$(cleanupRepos)')"
+      for repo in "${repos[@]}"; do
+        echo "📦 Processing repository: $repo"
 
-      echo "📦 Repositories to clean:"
-      printf ' - %s\n' "${target_repos[@]}"
-      echo ""
+        images=$(az acr manifest list-metadata --name "$(azureRegistry)" --repository "$repo" --orderby time_desc --output json)
 
-      for repo in "${target_repos[@]}"; do
-        echo "➡️  Processing repository: $repo"
+        total_images=$(echo "$images" | jq length)
+        echo "🔢 Total images: $total_images"
 
-        # Get all manifests (digest + timestamp) sorted by time descending
-        manifests=$(az acr repository show-manifests \
-          --name "$(azureRegistry)" \
-          --repository "$repo" \
-          --orderby time_desc \
-          --query "[].{digest:digest, timestamp:timestamp}" \
-          --output tsv)
+        if (( total_images > 3 )); then
+          digests_to_delete=$(echo "$images" | jq -r '.[3:][] | .digest')
 
-        if [ -z "$manifests" ]; then
-          echo "⚠️  No images found in $repo"
-          echo ""
-          continue
-        fi
-
-        echo "📝 All image digests with timestamps (newest first):"
-        echo "$manifests"
-        echo ""
-
-        # Extract digests
-        mapfile -t all_digests < <(echo "$manifests" | awk '{print $1}')
-        keep_digests=("${all_digests[@]:0:3}")
-        delete_digests=("${all_digests[@]:3}")
-
-        echo "✅ Keeping latest 3 images:"
-        for digest in "${keep_digests[@]}"; do
-          tags=$(az acr repository show-tags \
-            --name "$(azureRegistry)" \
-            --repository "$repo" \
-            --filter "digest=$digest" \
-            --output tsv)
-          if [ -n "$tags" ]; then
-            for tag in $tags; do
-              echo " - $repo:$tag (digest: $digest)"
-            done
-          else
-            echo " - <untagged> (digest: $digest)"
-          fi
-        done
-        echo ""
-
-        if [ "${#delete_digests[@]}" -gt 0 ]; then
-          echo "🗑️  Deleting older images:"
-          for digest in "${delete_digests[@]}"; do
-            tags=$(az acr repository show-tags \
-              --name "$(azureRegistry)" \
-              --repository "$repo" \
-              --filter "digest=$digest" \
-              --output tsv)
-            if [ -n "$tags" ]; then
-              for tag in $tags; do
-                echo " - Deleting: $repo:$tag (digest: $digest)"
-              done
-            else
-              echo " - Deleting: <untagged> (digest: $digest)"
-            fi
-
-            az acr repository delete \
-              --name "$(azureRegistry)" \
-              --image "$repo@$digest" \
-              --yes
+          for digest in $digests_to_delete; do
+            echo "🗑️ Deleting image digest: $digest"
+            az acr repository delete --name "$(azureRegistry)" --image "$repo@$digest" --yes
           done
         else
-          echo "🧹 No old images to delete."
+          echo "✅ Nothing to delete. Only $total_images image(s) exist in $repo."
         fi
-
-        echo ""
       done
 
-      echo "✅ Cleanup complete for all repositories."
+      echo "🎉 Cleanup complete for all repositories!"

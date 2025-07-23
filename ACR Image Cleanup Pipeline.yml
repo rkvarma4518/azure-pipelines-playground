@@ -49,19 +49,20 @@ steps:
             echo "🗑️ Deleting image digest: $digest"
             az acr repository delete --name "$(azureRegistry)" --image "$repo@$digest" --yes 2>&1 | grep -v "^WARNING"
           done
+          
+          images=$(az acr repository show-manifests \
+            --name '$(azureRegistry)' \
+            --repository $repo \
+            --output json)
+          sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')
+          echo ""
+          echo "Remaining 3 Images (digest timestamp tags):"
+          echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
+          echo ""
+
         else
           echo "✅ Nothing to delete. Only $total image(s) exist in $repo."
         fi
-
-        images=$(az acr repository show-manifests \
-          --name '$(azureRegistry)' \
-          --repository $repo \
-          --output json)
-        sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')
-        echo ""
-        echo "Remaining 3 Images (digest timestamp tags):"
-        echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
-        echo ""
       done
 
       echo "🎉 Cleanup complete for all repositories!"

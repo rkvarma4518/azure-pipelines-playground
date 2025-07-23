@@ -15,35 +15,40 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       echo "🧹 Starting cleanup for ACR: $(azureRegistry)"
+      echo ""
 
-      IFS=$'\n' read -rd '' -a repos <<< "$(echo "$(cleanupRepos)")"
+      # IFS=$',' read -rd '' -a repos <<< "$(echo "$(cleanupRepos)")"
+      IFS=',' read -ra repos <<< "$(cleanupRepos)"
 
       for repo in "${repos[@]}"; do
         echo "📦 Processing repository: $repo"
 
-        # images=$(az acr repository show-manifests \
-        #   --name '$(azureRegistry)' \
-        #   --repository $repo \
-        #   --output json)
-        images=$(az acr manifest list-metadata \
-          --name $repo \
-          --registry '$(azureRegistry)' \
+        images=$(az acr repository show-manifests \
+          --name '$(azureRegistry)' \
+          --repository $repo \
           --output json)
+        # images=$(az acr manifest list-metadata \
+        #   --name $repo \
+        #   --registry '$(azureRegistry)' \
+        #   --output json)
 
         sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')
         total=$(echo "$sorted_images" | jq length)
 
+        echo ""
         echo "🔢 Total images: $total"
+        echo ""
         echo "Images (digest timestamp tags):"
+        echo ""
         echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
-
-        # images=$(az acr manifest list-metadata --name "$(azureRegistry)" --repository "$repo" --orderby time_desc --output json)
+        echo ""
 
         if (( total > 3 )); then
           digests_to_delete=$(echo "$sorted_images" | jq -r '.[3:][] | .digest')
 
           for digest in $digests_to_delete; do
             echo "🗑️ Deleting image digest: $digest"
+            echo ""
             az acr repository delete --name "$(azureRegistry)" --image "$repo@$digest" --yes 2>&1 | grep -v "^WARNING"
           done
         else

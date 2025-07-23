@@ -57,10 +57,11 @@ steps:
           --name '$(azureRegistry)' \
           --repository $repo \
           --output json)
+        sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')
+        echo ""
         echo "Remaining 3 Images (digest timestamp tags):"
         echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
         echo ""
-
       done
 
       echo "🎉 Cleanup complete for all repositories!"

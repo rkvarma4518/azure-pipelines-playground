@@ -21,7 +21,11 @@ steps:
       for repo in "${repos[@]}"; do
         echo "📦 Processing repository: $repo"
 
-        images=$(az acr repository show-manifests \
+        # images=$(az acr repository show-manifests \
+        #   --name '$(azureRegistry)' \
+        #   --repository $repo \
+        #   --output json)
+        images=$(az acr manifest list-metadata \
           --name '$(azureRegistry)' \
           --repository $repo \
           --output json)

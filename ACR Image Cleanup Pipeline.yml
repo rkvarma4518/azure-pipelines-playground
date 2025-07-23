@@ -35,7 +35,7 @@ steps:
 
 
 
-        images=$(az acr manifest list-metadata --name "$(azureRegistry)" --repository "$repo" --orderby time_desc --output json)
+        # images=$(az acr manifest list-metadata --name "$(azureRegistry)" --repository "$repo" --orderby time_desc --output json)
 
         total_images=$(echo "$images" | jq length)
         echo "🔢 Total images: $total_images"

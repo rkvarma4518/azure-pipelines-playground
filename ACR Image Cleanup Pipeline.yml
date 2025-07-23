@@ -48,7 +48,6 @@ steps:
 
           for digest in $digests_to_delete; do
             echo "🗑️ Deleting image digest: $digest"
-            echo ""
             az acr repository delete --name "$(azureRegistry)" --image "$repo@$digest" --yes 2>&1 | grep -v "^WARNING"
           done
         else

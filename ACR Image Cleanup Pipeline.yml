@@ -4,86 +4,71 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-- group: variable_group  # Must include AZServiceSub, azureRegistry
+- group: variable_group  # Must include: azureRegistry, AZServiceSub, cleanupRepos
 
 steps:
 - task: AzureCLI@2
+  displayName: 'ACR Cleanup: Keep latest 3 images per repository'
   inputs:
     azureSubscription: '$(AZServiceSub)'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      echo "🔍 Fetching repositories from ACR: '$(azureRegistry)'..."
-
-      if [ -z "$(azureRegistry)" ]; then
-        echo "❌ ERROR: azureRegistry variable is not set."
-        exit 1
-      fi
-
-      # Get all repositories in the ACR
-      repositories=$(az acr repository list --name '$(azureRegistry)' --output tsv)
-      echo "Found repositories:"
-      echo "$repositories"
+      echo "🔧 Starting Azure Container Registry image cleanup"
       echo ""
 
-      # For each repo, find the latest image timestamp
-      declare -A repo_latest_date
+      # Convert cleanupRepos (multi-line) into array
+      IFS=$'\n' read -rd '' -a target_repos <<< "$(echo '$(cleanupRepos)')"
 
-      for repo in $repositories; do
-        # Get the latest manifest timestamp for this repo
-        latest_timestamp=$(az acr repository show-manifests \
-          --name '$(azureRegistry)' \
+      echo "📦 Target repositories to clean:"
+      printf ' - %s\n' "${target_repos[@]}"
+      echo ""
+
+      for repo in "${target_repos[@]}"; do
+        echo "➡️  Processing repository: $repo"
+
+        # Get list of image digests and timestamps, newest first
+        manifests=$(az acr repository show-manifests \
+          --name "$(azureRegistry)" \
           --repository "$repo" \
-          --query "max_by(@, &timestamp).timestamp" -o tsv)
+          --orderby time_desc \
+          --query "[].{digest:digest, timestamp:timestamp}" \
+          --output tsv)
 
-        # If no images, set timestamp to empty or epoch 0
-        if [ -z "$latest_timestamp" ]; then
-          latest_timestamp="1970-01-01T00:00:00Z"
+        if [ -z "$manifests" ]; then
+          echo "⚠️  No images found in $repo"
+          echo ""
+          continue
         fi
 
-        repo_latest_date["$repo"]="$latest_timestamp"
+        echo "📝 All image digests with timestamps (newest first):"
+        echo "$manifests"
+        echo ""
+
+        # Extract digests into array
+        mapfile -t all_digests < <(echo "$manifests" | awk '{print $1}')
+        keep_digests=("${all_digests[@]:0:3}")
+        delete_digests=("${all_digests[@]:3}")
+
+        echo "✅ Keeping latest 3 images:"
+        printf ' - %s\n' "${keep_digests[@]}"
+        echo ""
+
+        if [ "${#delete_digests[@]}" -gt 0 ]; then
+          echo "🗑️  Deleting older images:"
+          for digest in "${delete_digests[@]}"; do
+            echo " - Deleting: $digest"
+            az acr repository delete \
+              --name "$(azureRegistry)" \
+              --repository "$repo" \
+              --manifest "$digest" \
+              --yes
+          done
+        else
+          echo "🧹 No old images to delete."
+        fi
+
+        echo ""
       done
 
-      echo "Repositories with latest image timestamp:"
-      for repo in "${!repo_latest_date[@]}"; do
-        echo "$repo : ${repo_latest_date[$repo]}"
-      done
-      echo ""
-
-      # Sort repositories by timestamp desc and keep latest 3
-      sorted_repos=($(for repo in "${!repo_latest_date[@]}"; do
-        echo "${repo_latest_date[$repo]} $repo"
-      done | sort -r | awk '{print $2}'))
-
-      echo "Repositories sorted by latest image date (latest first):"
-      printf "%s\n" "${sorted_repos[@]}"
-      echo ""
-
-      # Keep latest 3 repos
-      keep_count=3
-      keep_repos=("${sorted_repos[@]:0:$keep_count}")
-      delete_repos=("${sorted_repos[@]:$keep_count}")
-
-      echo "Keeping repositories:"
-      printf " - %s\n" "${keep_repos[@]}"
-      echo ""
-
-      echo "Deleting repositories:"
-      printf " - %s\n" "${delete_repos[@]}"
-      echo ""
-
-      # Delete repositories other than latest 3
-      for repo in "${delete_repos[@]}"; do
-        echo "Deleting repository: $repo"
-        az acr repository delete --name '$(azureRegistry)' --repository "$repo" --yes
-      done
-
-
-      echo ""
-      echo "✅ Cleanup complete."
-      echo "Remaining repositories:"
-      for repo in "${keep_repos[@]}"; do
-        echo " - $repo"
-      done
-
-  displayName: 'ACR Cleanup: Keep latest 3 repositories by latest image date, delete others'
+      echo "✅ Cleanup complete for all repositories."

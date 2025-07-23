@@ -37,7 +37,7 @@ steps:
         echo "Images: $images"
         # images=$(az acr manifest list-metadata --name "$(azureRegistry)" --repository "$repo" --orderby time_desc --output json)
 
-        if (( total_images > 3 )); then
+        if (( total > 3 )); then
           digests_to_delete=$(echo "$images" | jq -r '.[3:][] | .digest')
 
           for digest in $digests_to_delete; do
@@ -45,7 +45,7 @@ steps:
             az acr repository delete --name "$(azureRegistry)" --image "$repo@$digest" --yes
           done
         else
-          echo "✅ Nothing to delete. Only $total_images image(s) exist in $repo."
+          echo "✅ Nothing to delete. Only $total image(s) exist in $repo."
         fi
       done
 

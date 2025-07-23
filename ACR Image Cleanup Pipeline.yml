@@ -8,7 +8,7 @@ variables:
 
 steps:
 - task: AzureCLI@2
-  displayName: 'ACR Cleanup: Keep latest 3 images per repository'
+  displayName: 'ACR Cleanup: Keep latest 3 images with tags per repository'
   inputs:
     azureSubscription: '$(AZServiceSub)'
     scriptType: 'bash'
@@ -17,17 +17,21 @@ steps:
       echo "🔧 Starting Azure Container Registry image cleanup"
       echo ""
 
-      # Convert cleanupRepos (multi-line) into array
+      if [ -z "$(azureRegistry)" ]; then
+        echo "❌ ERROR: 'azureRegistry' variable is not set."
+        exit 1
+      fi
+
       IFS=$'\n' read -rd '' -a target_repos <<< "$(echo '$(cleanupRepos)')"
 
-      echo "📦 Target repositories to clean:"
+      echo "📦 Repositories to clean:"
       printf ' - %s\n' "${target_repos[@]}"
       echo ""
 
       for repo in "${target_repos[@]}"; do
         echo "➡️  Processing repository: $repo"
 
-        # Get list of image digests and timestamps, newest first
+        # Get all manifests (digest + timestamp) sorted by time descending
         manifests=$(az acr repository show-manifests \
           --name "$(azureRegistry)" \
           --repository "$repo" \
@@ -45,23 +49,47 @@ steps:
         echo "$manifests"
         echo ""
 
-        # Extract digests into array
+        # Extract digests
         mapfile -t all_digests < <(echo "$manifests" | awk '{print $1}')
         keep_digests=("${all_digests[@]:0:3}")
         delete_digests=("${all_digests[@]:3}")
 
         echo "✅ Keeping latest 3 images:"
-        printf ' - %s\n' "${keep_digests[@]}"
+        for digest in "${keep_digests[@]}"; do
+          tags=$(az acr repository show-tags \
+            --name "$(azureRegistry)" \
+            --repository "$repo" \
+            --filter "digest=$digest" \
+            --output tsv)
+          if [ -n "$tags" ]; then
+            for tag in $tags; do
+              echo " - $repo:$tag (digest: $digest)"
+            done
+          else
+            echo " - <untagged> (digest: $digest)"
+          fi
+        done
         echo ""
 
         if [ "${#delete_digests[@]}" -gt 0 ]; then
           echo "🗑️  Deleting older images:"
           for digest in "${delete_digests[@]}"; do
-            echo " - Deleting: $digest"
-            az acr repository delete \
+            tags=$(az acr repository show-tags \
               --name "$(azureRegistry)" \
               --repository "$repo" \
-              --manifest "$digest" \
+              --filter "digest=$digest" \
+              --output tsv)
+            if [ -n "$tags" ]; then
+              for tag in $tags; do
+                echo " - Deleting: $repo:$tag (digest: $digest)"
+              done
+            else
+              echo " - Deleting: <untagged> (digest: $digest)"
+            fi
+
+            az acr repository delete \
+              --name "$(azureRegistry)" \
+              --image "$repo@$digest" \
               --yes
           done
         else

@@ -4,54 +4,62 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-- group: variable_group  # This group must include the values below
+- group: variable_group  # This group must include azureRegistry, ACRServiceConnection
 
-# List of different image names you want to push as (repository names)
-- name: imageNames
+# List of 5 public DockerHub images
+- name: dockerHubImages
   value: |
-    app1
-    app2
-    app3
-    backend
-    frontend
+    nginx:alpine
+    redis:latest
+    httpd:2.4
+    alpine:latest
+    busybox:latest
+
+# Repository name in ACR where all images will be pushed
+- name: acrRepository
+  value: apprepo
 
 steps:
-# Step 1: Login to DockerHub
-- task: Docker@2
-  inputs:
-    containerRegistry: '$(dockerHubServiceConnection)'
-    command: 'login'
-  displayName: 'Login to DockerHub'
-
-# Step 2: Pull base image from DockerHub
-- script: |
-    docker pull $(imageName):$(imageVersion)
-  displayName: 'Pull Base Image'
-
-# Step 3: Tag image with different image names (repositories) in ACR
-- script: |
-    echo "Tagging image with different names..."
-    echo "$(imageNames)" | while read newName; do
-      if [ -n "$newName" ]; then
-        docker tag $(imageName):$(imageVersion) $(azureRegistry).azurecr.io/$newName:$(imageVersion)
-      fi
-    done
-    docker images
-  displayName: 'Tag Image with Different Names'
-
-# Step 4: Login to Azure Container Registry (ACR)
+# Step 1: Login to Azure Container Registry (ACR)
 - task: Docker@2
   inputs:
     containerRegistry: '$(ACRServiceConnection)'
     command: 'login'
   displayName: 'Login to ACR'
 
-# Step 5: Push all differently named images to ACR
+# Step 2: Pull images from Docker Hub
 - script: |
-    echo "Pushing all images to ACR..."
-    echo "$(imageNames)" | while read newName; do
-      if [ -n "$newName" ]; then
-        docker push $(azureRegistry).azurecr.io/$newName:$(imageVersion)
+    echo "Pulling Docker Hub images..."
+    echo "$(dockerHubImages)" | while read image; do
+      if [ -n "$image" ]; then
+        docker pull $image
       fi
     done
-  displayName: 'Push Images with Different Names to ACR'
+  displayName: 'Pull 5 Public Images from Docker Hub'
+
+# Step 3: Tag images to push into ACR under a single repo with different tags
+- script: |
+    echo "Tagging images for ACR single repository '$(acrRepository)'..."
+    count=1
+    echo "$(dockerHubImages)" | while read image; do
+      if [ -n "$image" ]; then
+        tagName=v$count
+        docker tag $image $(azureRegistry).azurecr.io/$(acrRepository):$tagName
+        count=$((count + 1))
+      fi
+    done
+    docker images
+  displayName: 'Tag Images for ACR'
+
+# Step 4: Push tagged images to ACR
+- script: |
+    echo "Pushing images to ACR repository '$(acrRepository)'..."
+    count=1
+    echo "$(dockerHubImages)" | while read image; do
+      if [ -n "$image" ]; then
+        tagName=v$count
+        docker push $(azureRegistry).azurecr.io/$(acrRepository):$tagName
+        count=$((count + 1))
+      fi
+    done
+  displayName: 'Push Images to ACR with Different Tags'

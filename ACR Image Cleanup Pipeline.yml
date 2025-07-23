@@ -4,17 +4,17 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-- group: variable_group  # Must include azureRegistry, cleanupRepos, AZServiceSub
+- group: variable_group
 
 steps:
 - task: AzureCLI@2
   displayName: Cleanup ACR Images
   inputs:
-    azureSubscription: '$(AZServiceSub)'
+    azureSubscription: '$(azure_subscription_connection)'
     scriptType: 'bash'
     scriptLocation: 'inlineScript'
     inlineScript: |
-      echo "🧹 Starting cleanup for ACR: $(azureRegistry)"
+      echo "🧹 Starting cleanup for ACR: $(azure_registry)"
       echo ""
 
       # IFS=$',' read -rd '' -a repos <<< "$(echo "$(cleanupRepos)")"
@@ -24,13 +24,9 @@ steps:
         echo "📦 Processing repository: $repo"
 
         images=$(az acr repository show-manifests \
-          --name '$(azureRegistry)' \
+          --name '$(azure_registry)' \
           --repository $repo \
           --output json)
-        # images=$(az acr manifest list-metadata \
-        #   --name $repo \
-        #   --registry '$(azureRegistry)' \
-        #   --output json)
 
         sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')
         total=$(echo "$sorted_images" | jq length)
@@ -47,11 +43,11 @@ steps:
 
           for digest in $digests_to_delete; do
             echo "🗑️ Deleting image digest: $digest"
-            az acr repository delete --name "$(azureRegistry)" --image "$repo@$digest" --yes 2>&1 | grep -v "^WARNING"
+            az acr repository delete --name "$(azure_registry)" --image "$repo@$digest" --yes 2>&1 | grep -v "^WARNING"
           done
           
           images=$(az acr repository show-manifests \
-            --name '$(azureRegistry)' \
+            --name '$(azure_registry)' \
             --repository $repo \
             --output json)
           sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')

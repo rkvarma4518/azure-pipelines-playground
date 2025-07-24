@@ -4,7 +4,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-- group: variable_group  # This group must include azureRegistry, ACRServiceConnection
+- group: variable_group  # This group must include azure_registry, ACRServiceConnection
 
 # List of 5 public DockerHub images
 - name: dockerHubImages
@@ -44,7 +44,7 @@ steps:
     echo "$(dockerHubImages)" | while read image; do
       if [ -n "$image" ]; then
         tagName=v$count
-        docker tag $image $(azureRegistry).azurecr.io/$(acrRepository):$tagName
+        docker tag $image $(azure_registry).azurecr.io/$(acrRepository):$tagName
         count=$((count + 1))
       fi
     done
@@ -58,7 +58,7 @@ steps:
     echo "$(dockerHubImages)" | while read image; do
       if [ -n "$image" ]; then
         tagName=v$count
-        docker push $(azureRegistry).azurecr.io/$(acrRepository):$tagName
+        docker push $(azure_registry).azurecr.io/$(acrRepository):$tagName
         count=$((count + 1))
       fi
     done

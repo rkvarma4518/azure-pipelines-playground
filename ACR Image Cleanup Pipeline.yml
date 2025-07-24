@@ -16,7 +16,7 @@ steps:
     inlineScript: |
       echo "🧹 Starting cleanup for ACR: $(azure_registry)"
       echo "Fetching repositories"
-      repositories = $(az acr repository list --name '$(azure_registry)' --output tsv)
+      repositories=$(az acr repository list --name '$(azure_registry)' --output tsv)
       echo "$(repositories)"
       echo ""
 

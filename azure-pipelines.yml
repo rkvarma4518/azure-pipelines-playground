@@ -16,7 +16,7 @@ steps:
 # Step 2: Pull the Docker image from DockerHub
 - script: |
     docker pull $(imageName):$(imageVersion)
-    docker tag $(imageName):$(imageVersion) $(azureRegistry).azurecr.io/$(imageName):$(imageVersion)
+    docker tag $(imageName):$(imageVersion) $(azure_registry).azurecr.io/$(imageName):$(imageVersion)
     docker images
   displayName: 'Pull and Tag Docker Image'
 

@@ -20,7 +20,6 @@ steps:
       echo "$(repositories)"
       echo ""
 
-      # IFS=$',' read -rd '' -a repos <<< "$(echo "$(cleanupRepos)")"
       # IFS=',' read -ra repos <<< "$(cleanupRepos)"
 
       for repo in $repositories; do

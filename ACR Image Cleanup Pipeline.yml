@@ -15,12 +15,15 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       echo "🧹 Starting cleanup for ACR: $(azure_registry)"
+      echo "Fetching repositories"
+      repositories = $(az acr repository list --name '$(azure_registry)' --output tsv)
+      echo "$(repositories)"
       echo ""
 
       # IFS=$',' read -rd '' -a repos <<< "$(echo "$(cleanupRepos)")"
-      IFS=',' read -ra repos <<< "$(cleanupRepos)"
+      # IFS=',' read -ra repos <<< "$(cleanupRepos)"
 
-      for repo in "${repos[@]}"; do
+      for repo in $repositories; do
         echo "📦 Processing repository: $repo"
 
         images=$(az acr repository show-manifests \

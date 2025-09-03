@@ -21,6 +21,7 @@ steps:
       echo ""
 
       # IFS=',' read -ra repos <<< "$(cleanupRepos)"
+      # IFS=',' read -ra repos <<< "$(cleanupRepos)"
 
       for repo in $repositories; do
         echo "📦 Processing repository: $repo"

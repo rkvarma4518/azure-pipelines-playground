@@ -15,8 +15,6 @@ stages:
 
       - task: Bash@3
         displayName: "Fetch PR commits & extract tickets"
-        env:
-          GITHUB_TOKEN: $(System.AccessToken)   # uses service connection auth
         inputs:
           targetType: inline
           script: |

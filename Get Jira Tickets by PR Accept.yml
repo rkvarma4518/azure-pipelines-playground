@@ -62,7 +62,6 @@ jobs:
           echo "---- Commit messages ----"
           echo "$commit_messages"
 
-          # Fetch PR details
           pr_url="${COLLECTION_URI}${PROJECT}/_apis/git/repositories/${REPO_NAME}/pullRequests/${PR_ID}?api-version=7.0"
           echo "Fetching PR details from: $pr_url"
 

@@ -24,7 +24,7 @@ steps:
       # IFS=',' read -ra repos <<< "$(cleanupRepos)"
 
       for repo in $repositories; do
-        echo "📦 Processing repository: $repo"
+        echo "📦 Processing repository : $repo"
 
         images=$(az acr repository show-manifests \
           --name '$(azure_registry)' \

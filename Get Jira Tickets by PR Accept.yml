@@ -15,11 +15,10 @@ jobs:
     vmImage: 'ubuntu-latest'
 
   steps:
-    # ensure git credentials are persisted if you need git operations
     - checkout: self
       persistCredentials: true
 
-    # ensure jq is available (commonly installed, but we'll guard)
+    # install jq (if not available)
     - task: Bash@3
       displayName: 'Install jq (if missing)'
       inputs:
@@ -33,7 +32,7 @@ jobs:
             echo "jq is already installed"
           fi
 
-    # main extraction step — name is important for referencing outputs across jobs
+    # main extraction step
     - task: Bash@3
       name: SetTicketVar
       displayName: 'Fetch PR commits + PR details, extract JIRA tickets'
@@ -42,36 +41,42 @@ jobs:
         PR_ID: $(System.PullRequest.PullRequestId)
         COLLECTION_URI: $(System.CollectionUri)
         PROJECT: $(System.TeamProject)
-        REPO_ID: $(Build.Repository.ID)
+        REPO_NAME: $(Build.Repository.Name)
         FAIL_ON_NO_TICKETS: $(FAIL_ON_NO_TICKETS)
       inputs:
         targetType: 'inline'
         script: |
           set -euo pipefail
 
-          echo "PR_ID='${PR_ID:-}'"
+          echo "PR_ID=${PR_ID:-}"
+
           if [ -z "${PR_ID:-}" ]; then
-            echo "No PR ID found. This pipeline must be triggered as a PR validation build (pr: trigger). Exiting cleanly."
-            # Exit 0 so PR pipeline doesn't fail if someone started it manually on a branch without PR context
+            echo "No PR ID found. This pipeline must be triggered as a PR validation build."
             exit 0
           fi
 
           if [ -z "${AZDO_TOKEN:-}" ]; then
-            echo "ERROR: System.AccessToken is not available. Go to the pipeline settings and enable 'Allow scripts to access OAuth token'."
+            echo "ERROR: System.AccessToken is not available. Go to pipeline settings → enable 'Allow scripts to access OAuth token'."
             exit 1
           fi
 
           # -------------------------
           # 1) Fetch PR commits
           # -------------------------
-          commits_url="${COLLECTION_URI}${PROJECT}/_apis/git/repositories/${REPO_ID}/pullRequests/${PR_ID}/commits?api-version=7.0"
+          commits_url="${COLLECTION_URI}${PROJECT}/_apis/git/repositories/${REPO_NAME}/pullRequests/${PR_ID}/commits?api-version=7.0"
           echo "Fetching PR commits from: $commits_url"
-          http_code=$(curl -s -o pr_commits.json -w "%{http_code}" -u ":${AZDO_TOKEN}" -H "Accept: application/json" "$commits_url")
+
+          http_code=$(curl -s -o pr_commits.json -w "%{http_code}" \
+            -u ":${AZDO_TOKEN}" \
+            -H "Accept: application/json" \
+            "$commits_url")
+
           if [ "$http_code" -ne 200 ]; then
             echo "Failed to fetch PR commits (HTTP $http_code). Response:"
             cat pr_commits.json
             exit 1
           fi
+
           commit_messages=$(jq -r '.value[].comment' pr_commits.json | sed '/^$/d' || true)
           echo "---- Commit messages (from PR) ----"
           echo "$commit_messages"
@@ -79,14 +84,20 @@ jobs:
           # -------------------------
           # 2) Fetch PR title & description
           # -------------------------
-          pr_url="${COLLECTION_URI}${PROJECT}/_apis/git/repositories/${REPO_ID}/pullRequests/${PR_ID}?api-version=7.0"
+          pr_url="${COLLECTION_URI}${PROJECT}/_apis/git/repositories/${REPO_NAME}/pullRequests/${PR_ID}?api-version=7.0"
           echo "Fetching PR details from: $pr_url"
-          http_code2=$(curl -s -o pr_details.json -w "%{http_code}" -u ":${AZDO_TOKEN}" -H "Accept: application/json" "$pr_url")
+
+          http_code2=$(curl -s -o pr_details.json -w "%{http_code}" \
+            -u ":${AZDO_TOKEN}" \
+            -H "Accept: application/json" \
+            "$pr_url")
+
           if [ "$http_code2" -ne 200 ]; then
             echo "Failed to fetch PR details (HTTP $http_code2). Response:"
             cat pr_details.json
             exit 1
           fi
+
           pr_title=$(jq -r '.title // empty' pr_details.json)
           pr_description=$(jq -r '.description // empty' pr_details.json)
 
@@ -99,7 +110,6 @@ jobs:
           # -------------------------
           combined=$(printf "%s\n%s\n%s\n" "$commit_messages" "$pr_title" "$pr_description")
 
-          # Regex: uppercase letters, dash, digits (e.g., ABC-123). Adjust if your JIRA keys differ.
           tickets=$(echo "$combined" | grep -oE '[A-Z]+-[0-9]+' | sort -u || true)
 
           if [ -z "$tickets" ]; then
@@ -108,19 +118,14 @@ jobs:
               echo "FAIL_ON_NO_TICKETS=true -> failing the job."
               exit 1
             fi
-            # set empty variable (so subsequent jobs won't break)
             echo "##vso[task.setvariable variable=jiraTickets;isOutput=true] "
             exit 0
           fi
 
-          # create a comma-separated string for easy consumption
           tickets_csv=$(echo "$tickets" | paste -sd ',' -)
           echo "✅ Jira tickets found: $tickets_csv"
 
-          # Publish as pipeline variable (isOutput=true so other jobs can read it)
           echo "##vso[task.setvariable variable=jiraTickets;isOutput=true]$tickets_csv"
-
-          # write to file for debugging / later tasks
           echo "$tickets_csv" > jiraTickets.txt
 
 - job: UseTickets
@@ -130,7 +135,6 @@ jobs:
     vmImage: 'ubuntu-latest'
 
   variables:
-    # read the output variable from the previous job (SetTicketVar)
     TICKETS_FROM_EXTRACT: $[ dependencies.ExtractTickets.outputs['SetTicketVar.jiraTickets'] ]
 
   steps:
@@ -141,11 +145,10 @@ jobs:
         targetType: 'inline'
         script: |
           echo "Tickets passed from previous job: '$(TICKETS_FROM_EXTRACT)'"
-          # Example: iterate (comma-separated)
           IFS=',' read -ra ARR <<< "$(TICKETS_FROM_EXTRACT)"
           for t in "${ARR[@]}"; do
             if [ -n "$t" ]; then
               echo " -> would process ticket: $t"
-              # Example: call Jira API here to add comment / transition ticket
+              # Example: call Jira API here
             fi
           done

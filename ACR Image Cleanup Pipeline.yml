@@ -35,9 +35,9 @@ steps:
         total=$(echo "$sorted_images" | jq length)
 
         echo ""
-        echo "🔢 Total images: $total"
+        echo "🔢 Total images : $total"
         echo ""
-        echo "All Images (digest timestamp tags):"
+        echo "All Images (digest timestamp tags): "
         echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
         echo ""
 

@@ -1,0 +1,29 @@
+trigger: none
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: Jikuma.GitHubRestApiIntegration@0
+  inputs:
+    gitHubConnection: 'rkvarma4518 (1)'
+    method: 'GET'
+    githubrestapiurl: '/repos/rkvarma4518/deploy-docker-image/pulls?state=closed&per_page=10'
+    responseVariable: 'GITHUB_RESPONSE'
+  displayName: 'Call GitHub REST via service connection'
+
+- powershell: |
+    Write-Host "=== RAW GITHUB RESPONSE (first 1000 chars) ==="
+    $raw = "$(GITHUB_RESPONSE)"
+    Write-Host $raw.Substring(0, [Math]::Min($raw.Length, 1000))
+
+    Write-Host "=== PARSED PRS ==="
+    $prs = $raw | ConvertFrom-Json
+
+    foreach ($pr in $prs) {
+      $num   = $pr.number
+      $title = $pr.title
+      $author= $pr.user.login
+      Write-Host "PR #$num - $title (by $author)"
+    }
+  displayName: 'Show GitHub API response (PowerShell)'
+

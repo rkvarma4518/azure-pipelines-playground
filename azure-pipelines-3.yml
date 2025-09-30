@@ -3,27 +3,28 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- task: Jikuma.GitHubRestApiIntegration@0
+# 1️⃣ Fetch closed PRs and store response in a variable
+- task: InvokeRESTAPI@1
+  displayName: 'Fetch closed PRs from GitHub'
   inputs:
-    gitHubConnection: 'rkvarma4518 (1)'
+    connectionType: 'connectedServiceName'
+    connectedServiceName: 'rkvarma4518 (1)'
     method: 'GET'
-    githubrestapiurl: '/repos/rkvarma4518/deploy-docker-image/pulls?state=closed&per_page=10'
-    responseVariable: 'GITHUB_RESPONSE'
-  displayName: 'Call GitHub REST via service connection'
+    urlSuffix: '/repos/rkvarma4518/deploy-docker-image/pulls?state=closed&per_page=10'
+    headers: |
+      Accept: application/vnd.github.v3+json
+    resultVariable: 'GITHUB_RESPONSE'   # store JSON in variable
 
-- powershell: |
-    Write-Host "=== RAW GITHUB RESPONSE (first 1000 chars) ==="
-    $raw = "$(GITHUB_RESPONSE)"
-    Write-Host $raw.Substring(0, [Math]::Min($raw.Length, 1000))
+# 2️⃣ Print raw JSON directly in logs
+- script: |
+    echo "=== Raw GitHub PR JSON ==="
+    echo '$(GITHUB_RESPONSE)'
+  displayName: 'Print raw PR JSON'
 
-    Write-Host "=== PARSED PRS ==="
-    $prs = $raw | ConvertFrom-Json
+# 3️⃣ Pretty-print selected fields using jq (if available)
+- script: |
+    echo "=== PR List (number — title — author) ==="
+    echo '$(GITHUB_RESPONSE)' | jq -r '.[] | "PR #\(.number) — \(.title) — by: \(.user.login)"'
+  displayName: 'Pretty-print PRs'
 
-    foreach ($pr in $prs) {
-      $num   = $pr.number
-      $title = $pr.title
-      $author= $pr.user.login
-      Write-Host "PR #$num - $title (by $author)"
-    }
-  displayName: 'Show GitHub API response (PowerShell)'
 

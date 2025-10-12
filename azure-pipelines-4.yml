@@ -12,40 +12,37 @@ stages:
     displayName: "Get Closed PRs"
     steps:
 
-    # Install jq so we can pretty-print / parse JSON
     - script: |
         echo "Installing jq..."
         sudo apt-get update -y
         sudo apt-get install -y jq
       displayName: "Install jq"
 
-    # Call GitHub API using the service connection (no PAT exposed)
+    # Use the correct connectionType string: connectedServiceName
     - task: InvokeRESTAPI@1
       name: CallGitHub
       inputs:
-        connectionType: 'serviceConnection'
-        serviceConnection: 'GitHubConnection'   # <- ensure this matches your service connection name
+        connectionType: 'connectedServiceName'    # <- corrected
+        serviceConnection: 'rkvarma4518 (1)'     # <- your service connection name
         method: 'GET'
         urlSuffix: '/repos/rkvarma4518/deploy-docker-image/pulls?state=closed&per_page=10'
-        responseVariable: 'PR_RESPONSE'         # response will be stored in $(PR_RESPONSE)
+        responseVariable: 'PR_RESPONSE'
         waitForCompletion: 'true'
       displayName: "Invoke GitHub REST API (list closed PRs)"
 
-    # Print raw JSON and parse a friendly list with jq
     - script: |
-        echo "=== Raw response (first 500 chars) ==="
-        echo '$(PR_RESPONSE)' | cut -c -500
+        echo "=== Raw response (first 600 chars) ==="
+        echo '$(PR_RESPONSE)' | cut -c -600
         echo "..."
 
-        # Save to file for parsing
+        # Save response to a file
         echo '$(PR_RESPONSE)' > pr_response.json
 
         echo
         echo "=== Parsed closed PRs ==="
-        # For each PR: print number - title (state) merged_at
         jq -r '.[] | "\(.number) - \(.title) (\(.state)) merged_at: \(.merged_at)"' pr_response.json || echo "No PRs or parsing failed"
 
         echo
-        echo "=== Full JSON pretty-print ==="
-        echo '$(PR_RESPONSE)' | jq .
+        echo "=== Full JSON pretty-print (short) ==="
+        echo '$(PR_RESPONSE)' | jq . | head -n 200
       displayName: "Print & Parse PR Data"

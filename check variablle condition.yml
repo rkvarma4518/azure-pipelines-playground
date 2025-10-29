@@ -1,30 +1,30 @@
 trigger: none
 
+
+variables:
+  - name: variableGroupName
+    value: 'none'
+
+  # Conditional variable groups
+  - ${{ if eq(variables['Build.SourceBranchName'], 'dev') }}:
+    - group: variable_group
+    - name: variableGroupName
+      value: 'variable_group'
+
+  - ${{ if eq(variables['Build.SourceBranchName'], 'qa') }}:
+    - group: variable_group - Copy
+    - name: variableGroupName
+      value: 'variable_group - Copy'
+
 stages:
 - stage: Build
-  displayName: "Conditional Variable Group Example"
-  variables:
-    # Default variables (optional)
-    - name: environment
-      value: 'none'
-
-    # Conditional variable groups
-    - ${{ if eq(variables['Build.SourceBranchName'], 'dev') }}:
-      - group: car1-dev
-      - name: environment
-        value: 'dev'
-
-    - ${{ if eq(variables['Build.SourceBranchName'], 'qa') }}:
-      - group: car2-qa
-      - name: environment
-        value: 'qa'
-
+  displayName: "Conditional Variable Example"
   jobs:
   - job: PrintVars
     displayName: "Print Selected Variables"
     steps:
     - script: |
         echo "Branch Name: $(Build.SourceBranchName)"
-        echo "Environment: $(environment)"
+        echo "Variable Group Name: $(Build.SourceBranchName)"
         echo "Variable Group Applied Successfully"
       displayName: "Show Selected Variables"

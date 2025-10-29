@@ -26,5 +26,6 @@ stages:
     - script: |
         echo "Branch Name: $(Build.SourceBranchName)"
         echo "Variable Group Name: $(variableGroupName)"
+        echo "ACRServiceConnection Name: $(ACRServiceConnection)"
         echo "Variable Group Applied Successfully"
       displayName: "Show Selected Variables"

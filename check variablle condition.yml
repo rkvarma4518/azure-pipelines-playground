@@ -6,7 +6,7 @@ variables:
     value: 'none'
 
   # Conditional variable groups
-  - ${{ if eq(variables['Build.SourceBranchName'], 'dev') }}:
+  - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
     - group: variable_group
     - name: variableGroupName
       value: 'variable_group'
@@ -25,6 +25,6 @@ stages:
     steps:
     - script: |
         echo "Branch Name: $(Build.SourceBranchName)"
-        echo "Variable Group Name: $(Build.SourceBranchName)"
+        echo "Variable Group Name: $(variableGroupName)"
         echo "Variable Group Applied Successfully"
       displayName: "Show Selected Variables"

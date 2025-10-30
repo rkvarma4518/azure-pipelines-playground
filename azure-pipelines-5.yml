@@ -10,10 +10,6 @@ resources:
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-  - name: sp_details
-    value: $[ dependencies.CreateSpPipeline.outputs['build.setvarStep.sp_list'] ]
-
 steps:
   - task: AzureCLI@2
     displayName: 'Get Service Principle Details'
@@ -22,4 +18,4 @@ steps:
       scriptType: bash
       scriptLocation: inlineScript
       inlineScript: |
-        echo "Service Principle Details From: $(sp_details)"
+        echo "Service Principle Details From: $(sp_list)"

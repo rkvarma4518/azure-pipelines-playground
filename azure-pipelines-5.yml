@@ -5,8 +5,8 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  -group: SP Details
-  
+- group: SP Details   # <-- Your linked variable group
+
 steps:
 # Step 1: Azure CLI Task (v2) executing a Bash script
 - task: AzureCLI@2
@@ -17,6 +17,8 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       echo "Running Azure CLI + Bash Script"
+      echo "Variable payername from group: $(payername)"
+
       parse_payernames() {
         input="$1"
         cleaned=$(echo "$input" | sed -E "s/[][]//g; s/[\"'‘’]//g; s/,/ /g")

@@ -146,10 +146,12 @@ steps:
       echo ""
       echo "Here is all SP Details"
       # Example: Print all SP outputs
-      for output in "${sp_outputs[@]}"; do
-        echo "$output"
-        echo ""
-      done
+      # for output in "${sp_outputs[@]}"; do
+      #   echo "$output"
+      #   echo ""
+      # done
+
+      echo "$sp_outputs"
 
       echo "##vso[task.setvariable variable=sp_list;isOutput=false;isSecret=false]$sp_outputs"
 

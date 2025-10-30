@@ -48,7 +48,7 @@ steps:
         fi
 
         ((index--))  # Convert to 0-based index
-        echo "$index"
+        echo "index found is '$index'"
         # Create JSON-like dictionary
         local json_output
         json_output=$(cat <<EOF

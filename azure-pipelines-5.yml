@@ -1,0 +1,25 @@
+trigger: none  # No direct code trigger, only run after build
+
+# Run this pipeline after the classic build pipeline finishes
+resources:
+  pipelines:
+    - pipeline: CreateSpPipeline          # Alias for reference
+      source: create service principle   # Name of your classic pipeline
+      trigger: true                    # Auto-trigger when it succeeds
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: sp_details
+    value: $[ dependencies.CreateSpPipeline.outputs['build.setvarStep.sp_list'] ]
+
+steps:
+  - task: AzureCLI@2
+    displayName: 'Get Service Principle Details'
+    inputs:
+      azureSubscription: 'az-resource-manager'
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        echo "Service Principle Details From: $(sp_details)"

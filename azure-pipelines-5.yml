@@ -1,21 +1,150 @@
-trigger: none  # No direct code trigger, only run after build
-
-# Run this pipeline after the classic build pipeline finishes
-resources:
-  pipelines:
-    - pipeline: CreateSpPipeline          # Alias for reference
-      source: create service principle   # Name of your classic pipeline
-      trigger: true                    # Auto-trigger when it succeeds
+trigger:
+- main   # or your branch name
 
 pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-  - task: AzureCLI@2
-    displayName: 'Get Service Principle Details'
-    inputs:
-      azureSubscription: 'az-resource-manager'
-      scriptType: bash
-      scriptLocation: inlineScript
-      inlineScript: |
-        echo "Service Principle Details From: $(sp_list)"
+# Step 1: Azure CLI Task (v2) executing a Bash script
+- task: AzureCLI@2
+  displayName: 'Run Bash Script via Azure CLI'
+  inputs:
+    azureSubscription: 'az-resource-manager'   # Replace with your Azure service connection name
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Running Azure CLI + Bash Script"
+      parse_payernames() {
+        input="$1"
+        cleaned=$(echo "$input" | sed -E "s/[][]//g; s/[\"'‘’]//g; s/,/ /g")
+        echo "$cleaned"
+      }
+
+      payername_arr=($(parse_payernames "$(payername)"))
+      payerids_arr=($(parse_payernames "$(payerids)"))
+      payerClientIds_arr=($(parse_payernames "$(payerClientIds)"))
+      payerClientSecrets_arr=($(parse_payernames "$(payerClientSecrets)"))
+      payerClientPrincipalIds_arr=($(parse_payernames "$(payerClientPrincipalIds)"))
+
+
+      # Array to store output of creation or renewal
+      declare -a sp_outputs=()
+
+
+      get_sp_details_from_input() {
+        local SP_NAME="$1"
+
+        # Find index of SP_NAME in payername_arr
+        index=$(echo "${payername_arr[@]}" | tr ' ' '\n' | grep -n -x "$SP_NAME" | cut -d: -f1)
+
+        if [[ -z "$index" ]]; then
+          echo "❌ Error: SP name '$SP_NAME' not found in payername_arr."
+          return 1
+        fi
+
+        ((index--))  # Convert to 0-based index
+
+        # Create JSON-like dictionary
+        local json_output
+        json_output=$(cat <<EOF
+      {
+        "payername": "${payername_arr[$index]}",
+        "payerids": "${payerids_arr[$index]}",
+        "payerClientIds": "${payerClientIds_arr[$index]}",
+        "payerClientSecrets": "${payerClientSecrets_arr[$index]}",
+        "payerClientPrincipalIds": "${payerClientPrincipalIds_arr[$index]}"
+      }
+      EOF
+      )
+
+        # Return JSON
+        echo "$json_output"
+      }
+
+
+      renew_sp_credentials() {
+        local APP_ID="$1"
+        local SP_NAME="$2"
+
+        CRED_OUTPUT=$(az ad app credential reset --id "$APP_ID" --years 1)
+
+        # FINAL_OUTPUT=$(echo "$CRED_OUTPUT" | jq --arg name "$SP_NAME" '. + {displayName: $name}')
+        SP_DETAILS=$(az ad sp show --id "$APP_ID")
+
+        FINAL_OUTPUT=$(echo "$CRED_OUTPUT" | jq --arg dn "$(echo "$SP_DETAILS" | jq -r '.displayName')" \
+                                            --arg pid "$(echo "$SP_DETAILS" | jq -r '.id')" \
+                                            '. + {payername: $dn, payerClientPrincipalIds: $pid}')
+
+        # Print final output (or use echo to return it)
+        echo "$FINAL_OUTPUT"
+      }
+
+
+      check_sp_expiry() {
+        SP_NAME="$1"
+
+        APP_ID=$(az ad sp list --display-name "$SP_NAME" --query "[0].appId" -o tsv)
+        END_DATE=$(az ad app credential list --id "$APP_ID" --query "[-1].endDateTime" -o tsv)
+
+        CURRENT_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+        if [[ "$END_DATE" < "$CURRENT_DATE" ]]; then
+          echo "❌ Service Principal '$SP_NAME' expired."
+          echo "END_DATE - ${END_DATE}"
+
+          RESULT=$(renew_sp_credentials "$APP_ID" "$SP_NAME")
+          sp_outputs+=("$RESULT")
+          echo "✅ Service Principal '$SP_NAME' Renewd."
+
+        else
+          echo "✅ Service Principal '$SP_NAME' not expired."
+          echo "END_DATE - ${END_DATE}"
+
+          RESULT=$(get_sp_details_from_input "$SP_NAME")
+          sp_outputs+=("$RESULT")
+        fi
+      }
+
+
+      # Define SP names to check
+      # sp_names=("mySP1" "Temp")
+
+      echo "📋 Collecting all existing SP names from Azure..."
+      EXISTING_SP_APPID=$(az ad app list --all --query "[].displayName" -o tsv)
+
+      echo "🔍 Checking if each SP exists..."
+      echo ""
+      for sp in "${payername_arr[@]}"; do
+        # Check if the SP name exists in the list
+        if echo "$EXISTING_SP_APPID" | grep -Fxq "$sp"; then
+          echo "Already exists - $sp"
+          check_sp_expiry "$sp"
+          echo "---------------------------------------------"
+        else
+          echo "Need to create - $sp"
+          RESULT=$(az ad sp create-for-rbac --name "$sp" --skip-assignment)
+
+          # Extract the appId from the JSON
+          app_id=$(echo "$RESULT" | jq -r '.appId')
+          # Use appId to get the corresponding service principal ID
+          sp_id=$(az ad sp show --id "$app_id" --query id --output tsv)
+
+          # Final dic
+          FINAL_RESULT=$(echo "$RESULT" | jq --arg sp_id "$sp_id" '. + {payerClientPrincipalIds: $sp_id}')
+          sp_outputs+=("$FINAL_RESULT")
+          echo "✅ Service Principal '$sp' Created."
+          echo "---------------------------------------------"
+        fi
+      done
+
+
+      echo ""
+      echo "Here is all SP Details"
+      # Example: Print all SP outputs
+      for output in "${sp_outputs[@]}"; do
+        echo "$output"
+        echo ""
+      done
+
+      echo "##vso[task.setvariable variable=sp_list;isOutput=false;isSecret=false]$sp_outputs"
+

@@ -63,6 +63,7 @@ steps:
       )
 
         # Return JSON
+        echo "Here is sp detial - '$json_output'"
         echo "$json_output"
       }
 
@@ -151,7 +152,7 @@ steps:
       #   echo ""
       # done
 
-      echo "$sp_outputs"
+      # echo "$sp_outputs"
 
       echo "##vso[task.setvariable variable=sp_list;isOutput=false;isSecret=false]$sp_outputs"
 

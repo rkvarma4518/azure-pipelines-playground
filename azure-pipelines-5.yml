@@ -52,15 +52,15 @@ steps:
         # Create JSON-like dictionary
         local json_output
         json_output=$(cat <<EOF
-        {
-          "payername": "${payername_arr[$index]}",
-          "payerids": "${payerids_arr[$index]}",
-          "payerClientIds": "${payerClientIds_arr[$index]}",
-          "payerClientSecrets": "${payerClientSecrets_arr[$index]}",
-          "payerClientPrincipalIds": "${payerClientPrincipalIds_arr[$index]}"
-        }
-        EOF
-        )
+      {
+        "payername": "${payername_arr[$index]}",
+        "payerids": "${payerids_arr[$index]}",
+        "payerClientIds": "${payerClientIds_arr[$index]}",
+        "payerClientSecrets": "${payerClientSecrets_arr[$index]}",
+        "payerClientPrincipalIds": "${payerClientPrincipalIds_arr[$index]}"
+      }
+      EOF
+      )
 
         # Return JSON
         echo "$json_output"

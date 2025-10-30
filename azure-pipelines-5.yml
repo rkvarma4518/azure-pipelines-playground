@@ -6,6 +6,7 @@ pool:
 
 variables:
   -group: SP Details
+  
 steps:
 # Step 1: Azure CLI Task (v2) executing a Bash script
 - task: AzureCLI@2

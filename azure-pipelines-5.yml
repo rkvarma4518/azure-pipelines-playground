@@ -31,7 +31,6 @@ steps:
       payerClientSecrets_arr=($(parse_payernames "$(payerClientSecrets)"))
       payerClientPrincipalIds_arr=($(parse_payernames "$(payerClientPrincipalIds)"))
 
-
       # Array to store output of creation or renewal
       declare -a sp_outputs=()
 
@@ -47,8 +46,8 @@ steps:
           return 1
         fi
 
-        ((index--))  # Convert to 0-based index
-        echo "index found is '$index'"
+        ((index--))  # Convert to 0-based
+
         # Create JSON-like dictionary
         local json_output
         json_output=$(cat <<EOF
@@ -153,5 +152,5 @@ steps:
 
       # echo "$sp_outputs"
 
-      echo "##vso[task.setvariable variable=sp_list;isOutput=false;isSecret=false]$sp_outputs"
+      # echo "##vso[task.setvariable variable=sp_list;isOutput=false;isSecret=false]$sp_outputs"
 

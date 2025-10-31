@@ -143,12 +143,12 @@ steps:
 
 
       echo "Script execution completed!!"
-      # echo "Here is all SP Details"
+      echo "Here is all SP Details"
       # Example: Print all SP outputs
-      # for output in "${sp_outputs[@]}"; do
-      #   echo "$output"
-      #   echo ""
-      # done
+      for output in "${sp_outputs[@]}"; do
+        echo "$output"
+        echo ""
+      done
       # Encode to prevent multiline issues
       # encoded=$(echo "$sp_outputs" | base64 -w 0)
 

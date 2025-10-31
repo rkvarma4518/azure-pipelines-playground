@@ -149,8 +149,10 @@ steps:
       #   echo "$output"
       #   echo ""
       # done
-      echo "##vso[task.setvariable variable=sp_outputs;isOutput=true]$sp_outputs"
+      # Encode to prevent multiline issues
+      encoded=$(echo "$output" | base64 -w 0)
 
+      echo "##vso[task.setvariable variable=sp_output;isOutput=true]$sp_outputs"
 
 - task: AzureCLI@2
   displayName: 'Deploy Bicep with Array Input'
@@ -160,16 +162,18 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       echo "Deploying Bicep file with array input..."
-      
+      # Decode and use in a command
+      decoded=$(echo "$SP_ENCODED" | base64 --decode)
+
       output=$(az deployment group create \
         --verbose \
         --resource-group azure-devops \
         --template-file sp.bicep \
-        --parameters sp_details='$SharedFromPrevTask' \
+        --parameters sp_details='$decoded' \
         --query properties.outputs.SpDetails.value -o json)
 
       echo "Bicep deployment completed!"
       echo "$output"
 
   env:
-    SharedFromPrevTask: $[ dependencies.GenerateValue.outputs['GenerateValue.sp_outputs'] ]
+    SP_ENCODED: $[ dependencies.DeployBicep.outputs['DeployBicep.sp_output'] ]

@@ -170,7 +170,7 @@ steps:
       echo "Converting plain text JSON objects into a JSON array..."
       # Convert to array and save in variable
       json_array=$(echo "["; sed '$!s/$/,/' bicep_output.txt; echo "]")
-
+      echo "$json_array"
       output=$(az deployment group create \
         --verbose \
         --resource-group azure-devops \

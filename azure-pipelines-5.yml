@@ -159,7 +159,6 @@ steps:
     inlineScript: |
       echo "Deploying Bicep file with array input..."
       echo "Converting plain text JSON objects into a JSON array..."
-      # Convert to array and save in variable
       json_array=$(echo "["; sed '/}$/!b; $!s/$/,/' bicep_output.txt; echo "]")
       compact_json=$(echo "$json_array" | tr -d '\n' | tr -d '[:space:]')
 

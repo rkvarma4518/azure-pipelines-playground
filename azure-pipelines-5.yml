@@ -148,6 +148,7 @@ steps:
       for output in "${sp_outputs[@]}"; do
         echo "$output"
         echo ""
+        echo "$output" >> bicep_output.txt
       done
       # Encode to prevent multiline issues
       # encoded=$(echo "$sp_outputs" | base64 -w 0)
@@ -156,7 +157,7 @@ steps:
 
       # Save to file
       # printf "%s" "${sp_outputs}" > bicep_output.txt
-      echo "$sp_outputs[@]" > bicep_output.txt
+      # echo "$sp_outputs[@]" > bicep_output.txt
 
 # - task: AzureCLI@2
 #   displayName: 'Deploy Bicep with Array Input'

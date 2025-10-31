@@ -177,7 +177,7 @@ steps:
         --resource-group azure-devops \
         --template-file sp.bicep \
         --parameters sp_details="$compact_json" \
-        --query properties.outputs.SpDetails.value -o json)
+        --query "properties.outputs" -o json)
 
       echo "Bicep deployment completed!"
       echo "$output"

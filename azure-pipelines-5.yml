@@ -170,12 +170,14 @@ steps:
       echo "Converting plain text JSON objects into a JSON array..."
       # Convert to array and save in variable
       json_array=$(echo "["; sed '/}$/!b; $!s/$/,/' bicep_output.txt; echo "]")
+      compact_json=$(echo "$json_array" | tr -d '\n' | tr -d '[:space:]')
+
       echo "$json_array"
       output=$(az deployment group create \
         --verbose \
         --resource-group azure-devops \
         --template-file sp.bicep \
-        --parameters sp_details='$json_array' \
+        --parameters sp_details='$compact_json' \
         --query properties.outputs.SpDetails.value -o json)
 
       echo "Bicep deployment completed!"

@@ -142,11 +142,34 @@ steps:
       done
 
 
-      echo ""
-      echo "Here is all SP Details"
+      echo "Script execution completed!!"
+      # echo "Here is all SP Details"
       # Example: Print all SP outputs
-      for output in "${sp_outputs[@]}"; do
-        echo "$output"
-        echo ""
-      done
+      # for output in "${sp_outputs[@]}"; do
+      #   echo "$output"
+      #   echo ""
+      # done
+      echo "##vso[task.setvariable variable=sp_outputs;isOutput=true]$sp_outputs"
 
+
+- task: AzureCLI@2
+  displayName: 'Deploy Bicep with Array Input'
+  inputs:
+    azureSubscription: 'az-resource-manager'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Deploying Bicep file with array input..."
+      
+      output=$(az deployment group create \
+        --verbose \
+        --resource-group azure-devops \
+        --template-file sp.bicep \
+        --parameters sp_details='$SharedFromPrevTask' \
+        --query properties.outputs.SpDetails.value -o json)
+
+      echo "Bicep deployment completed!"
+      echo "$output"
+
+  env:
+    SharedFromPrevTask: $[ dependencies.GenerateValue.outputs['GenerateValue.sp_outputs'] ]

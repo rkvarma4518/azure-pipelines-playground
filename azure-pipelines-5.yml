@@ -172,7 +172,7 @@ steps:
       json_array=$(echo "["; sed '/}$/!b; $!s/$/,/' bicep_output.txt; echo "]")
       compact_json=$(echo "$json_array" | tr -d '\n' | tr -d '[:space:]')
 
-      echo "$json_array"
+      echo "$compact_json"
       output=$(az deployment group create \
         --verbose \
         --resource-group azure-devops \

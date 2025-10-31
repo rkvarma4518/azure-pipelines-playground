@@ -149,14 +149,6 @@ steps:
         echo ""
         echo "$output" >> bicep_output.txt
       done
-      # Encode to prevent multiline issues
-      # encoded=$(echo "$sp_outputs" | base64 -w 0)
-
-      # echo "##vso[task.setvariable variable=sp_output;isOutput=true]$encoded"
-
-      # Save to file
-      # printf "%s" "${sp_outputs}" > bicep_output.txt
-      # echo "$sp_outputs[@]" > bicep_output.txt
 
 - task: AzureCLI@2
   displayName: 'Deploy Bicep with Array Input'
@@ -171,16 +163,6 @@ steps:
       json_array=$(echo "["; sed '/}$/!b; $!s/$/,/' bicep_output.txt; echo "]")
       compact_json=$(echo "$json_array" | tr -d '\n' | tr -d '[:space:]')
 
-      # output=$(az deployment group create \
-      #   --verbose \
-      #   --resource-group azure-devops \
-      #   --template-file sp.bicep \
-      #   --parameters sp_details="$compact_json" \
-      #   --query "properties.outputs" -o json)
-
-      # echo "Bicep deployment completed!"
-      # echo "$output"
-
       az deployment group create \
         --verbose \
         --resource-group azure-devops \
@@ -188,8 +170,7 @@ steps:
         --parameters sp_details="$compact_json"
         # --query "properties.outputs" -o json
 
-#   env:
-#     SP_ENCODED: $[ dependencies.DeployBicep.outputs['DeployBicep.sp_output'] ]
+      echo "Bicep deployment completed!"
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Bicep Output File'

@@ -155,7 +155,8 @@ steps:
       # echo "##vso[task.setvariable variable=sp_output;isOutput=true]$encoded"
 
       # Save to file
-      echo "$sp_outputs" > bicep_output.txt
+      printf "%s" "${sp_outputs}" > bicep_output.txt
+      # echo "$sp_outputs[@]" > bicep_output.txt
 
 # - task: AzureCLI@2
 #   displayName: 'Deploy Bicep with Array Input'

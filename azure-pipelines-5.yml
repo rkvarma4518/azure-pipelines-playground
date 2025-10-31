@@ -169,7 +169,7 @@ steps:
       echo "Deploying Bicep file with array input..."
       echo "Converting plain text JSON objects into a JSON array..."
       # Convert to array and save in variable
-      json_array=$(echo "["; sed '$!s/$/,/' bicep_output.txt; echo "]")
+      json_array=$(echo "["; sed '/}$/!b; $!s/$/,/' input.txt; echo "]")
       echo "$json_array"
       output=$(az deployment group create \
         --verbose \

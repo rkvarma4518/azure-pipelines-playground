@@ -150,9 +150,9 @@ steps:
       #   echo ""
       # done
       # Encode to prevent multiline issues
-      encoded=$(echo "$output" | base64 -w 0)
+      encoded=$(echo "$sp_outputs" | base64 -w 0)
 
-      echo "##vso[task.setvariable variable=sp_output;isOutput=true]$sp_outputs"
+      echo "##vso[task.setvariable variable=sp_output;isOutput=true]$encoded"
 
 - task: AzureCLI@2
   displayName: 'Deploy Bicep with Array Input'

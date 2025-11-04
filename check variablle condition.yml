@@ -13,7 +13,7 @@ steps:
     scriptLocation: 'inlineScript'
     inlineScript: |
       echo "Deploying Bicep file with array input..."
-      ech "$(sp_detail)"
+      echo "$(sp_detail)"
       az deployment group create \
         --verbose \
         --resource-group azure-devops \

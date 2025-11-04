@@ -2,30 +2,22 @@ trigger: none
 
 
 variables:
-  - name: variableGroupName
-    value: 'none'
+  - group: SP Details
 
-  # Conditional variable groups
-  - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
-    - group: variable_group
-    - name: variableGroupName
-      value: 'variable_group'
+steps:
+- task: AzureCLI@2
+  displayName: 'Deploy Bicep with Array Input'
+  inputs:
+    azureSubscription: 'az-resource-manager'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Deploying Bicep file with array input..."
+      az deployment group create \
+        --verbose \
+        --resource-group azure-devops \
+        --template-file sp.bicep \
+        --parameters sp_details="$sp_detail"
+        # --query "properties.outputs" -o json
 
-  - ${{ if eq(variables['Build.SourceBranchName'], 'qa') }}:
-    - group: variable_group - Copy
-    - name: variableGroupName
-      value: 'variable_group - Copy'
-
-stages:
-- stage: Build
-  displayName: "Conditional Variable Example"
-  jobs:
-  - job: PrintVars
-    displayName: "Print Selected Variables"
-    steps:
-    - script: |
-        echo "Branch Name: $(Build.SourceBranchName)"
-        echo "Variable Group Name: $(variableGroupName)"
-        echo "ACRServiceConnection Name: $(ACRServiceConnection)"
-        echo "Variable Group Applied Successfully"
-      displayName: "Show Selected Variables"
+      echo "Bicep deployment completed!"

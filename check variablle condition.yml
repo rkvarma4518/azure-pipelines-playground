@@ -17,7 +17,7 @@ steps:
         --verbose \
         --resource-group azure-devops \
         --template-file sp.bicep \
-        --parameters sp_details="$(sp_detail)"
+        --parameters sp_details="$(sp_detail)" \
         --debug
         # --query "properties.outputs" -o json
 

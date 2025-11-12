@@ -1,0 +1,11 @@
+trigger: none
+
+pr: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  # Run deploy-main.yml only when branch = dev
+  - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+    - template: deploy-main.yml

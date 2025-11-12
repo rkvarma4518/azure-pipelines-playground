@@ -1,0 +1,5 @@
+# deploy-main.yml
+
+steps:
+  - script: echo "Hello, world from deploy - branch qa!"
+    displayName: "Run a one-line script"

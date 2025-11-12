@@ -1,12 +1,5 @@
-trigger:
-- main
-
-pr: none
-
-pool:
-  vmImage: ubuntu-latest
+# deploy-main.yml
 
 steps:
-- script: echo Hello, world from deploy!
-  displayName: 'Run a one-line script'
-
+  - script: echo "Hello, world from deploy!"
+    displayName: "Run a one-line script"

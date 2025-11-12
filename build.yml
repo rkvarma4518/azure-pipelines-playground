@@ -6,6 +6,10 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-  # Run deploy-main.yml only when branch = dev
+  # Run deploy-main.yml only when branch = main
   - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+    - template: deploy-main.yml
+
+# Run deploy-main.yml only when branch = qa
+  - ${{ if eq(variables['Build.SourceBranchName'], 'qa') }}:
     - template: deploy-main.yml

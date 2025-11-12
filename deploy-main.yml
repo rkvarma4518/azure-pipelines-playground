@@ -1,5 +1,5 @@
 # deploy-main.yml
 
 steps:
-  - script: echo "Hello, world from deploy!"
+  - script: echo "Hello, world from deploy - branch main!"
     displayName: "Run a one-line script"

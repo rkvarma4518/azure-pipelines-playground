@@ -7,5 +7,5 @@ pool:
 
 steps:
   # Run deploy-main.yml only when branch = dev
-  - ${{ if eq(variables['Build.SourceBranchName'], 'dev') }}:
+  - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
     - template: deploy-main.yml

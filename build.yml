@@ -6,7 +6,7 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- script: echo Hello, world!
+- script: echo Hello, world from build!
   displayName: 'Run a one-line script'
 
-- template: deploy-dev.yml
+- template: deploy-main.yml

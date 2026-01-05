@@ -25,3 +25,4 @@ steps:
 
       for repo in "${repos[@]}"; do
         echo "📦 Processing repository : $repo"
+      done

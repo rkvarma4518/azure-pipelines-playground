@@ -44,7 +44,7 @@ steps:
         tags_to_delete=$(az acr repository show-tags \
           --name "$(azure_registry)" \
           --repository "$repo" \
-          --output tsv | grep -E '^(dev|test)$')
+          --output json)
 
         echo "$tags_to_delete"
 

@@ -41,10 +41,18 @@ steps:
         echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
         echo ""
 
-        tags_to_delete=$(az acr repository show-tags \
+        tags_to_delete=$(az acr repository show-manifests \
           --name "$(azure_registry)" \
           --repository "$repo" \
-          --output json)
+          --query "[?tags!=null].[digest, timestamp, tags]" \
+          --output tsv | while read digest timestamp tags_json; do
+            # tags_json is in JSON array format: ["tag1","tag2"]
+            tags=$(echo $tags_json | tr -d '[]"')
+            for tag in $(echo $tags | tr ',' ' '); do
+              echo "$digest $timestamp $tag"
+            done
+        done)
+
 
         echo "$tags_to_delete"
 

@@ -43,13 +43,11 @@ steps:
 
         if (( total > 3 )); then
           # digests_to_delete=$(echo "$sorted_images" | jq -r '.[3:][] | .digest')
-          digests_to_delete=$(echo "$sorted_images" | jq -r '
-            .[] |
-            . as $img |
+          digests_to_delete=$(
+          echo "$sorted_images" | jq -r '
+            .[] as $img |
             ($img.tags[]?) as $tag |
             {
-              digest: $img.digest,
-              ts: $img.timestamp,
               tag: $tag,
               group:
                 (if ($tag | startswith("qa.")) then "qa"
@@ -58,20 +56,12 @@ steps:
                 end)
             } |
             [.group, .tag] | @tsv
-          ' | awk '
-          {
-            group=$1
-            tag=$2
+          ' | awk '{ g=$1; t=$2; if (!seen[t]++) { cnt[g]++; if (cnt[g] > 3) print t } }'
+          )
 
-            if (!seen[tag]++) {
-              count[group]++
-              if (count[group] > 3)
-                print tag
-            }
-          ')
           echo "$digests_to_delete"
           # for digest in $digests_to_delete; do
-            echo "🗑️ Deleting image digest: $digest"
+            # echo "🗑️ Deleting image digest: $digest"
             # az acr repository delete --name "$(azure_registry)" --image "$repo@$digest" --yes 2>&1 | grep -v "^WARNING"
           # done
           

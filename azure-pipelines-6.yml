@@ -91,9 +91,9 @@ steps:
           # echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
           # echo ""
 
-        else
-          echo "✅ Nothing to delete. Only $total image(s) exist in $repo."
-        fi
+        # else
+        #   echo "✅ Nothing to delete. Only $total image(s) exist in $repo."
+        # fi
       done
 
       echo "🎉 Cleanup complete for all repositories!"

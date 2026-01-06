@@ -44,29 +44,31 @@ steps:
         if (( total > 3 )); then
           # digests_to_delete=$(echo "$sorted_images" | jq -r '.[3:][] | .digest')
           digests_to_delete=$(
-          echo "$sorted_images" | jq -r '
-            .[] |
+          echo "$sorted_images" | jq -R -s -c '
+            split("\n")[] | select(length>0) |
+            split(" ") as [$digest, $ts, $tags] |
+            ($tags | split(","))[] as $tag |
             {
-              digest: .digest,
-              ts: .timestamp,
+              tag: $tag,
+              ts: $ts,
               category:
-                (if (.tags | any(startswith("qa."))) then "qa"
-                elif (.tags | any(startswith("prod."))) then "prod"
+                (if ($tag | startswith("qa.")) then "qa"
+                elif ($tag | startswith("prod.")) then "prod"
                 else "other"
                 end)
             } |
-            [.category, .ts, .digest] | @tsv
+            [.category, .ts, .tag] | @tsv
           ' | sort -k1,1 -k2,2r | awk '
           {
-            category = $1
-            digest   = $3
+            cat = $1
+            tag = $3
 
-            count[category]++
-            if (count[category] > 3)
-              print digest
+            count[cat]++
+            if (count[cat] > 3)
+              print tag
           }
-          '
-          )
+          ')
+
 
           echo "$digests_to_delete"
           # for digest in $digests_to_delete; do

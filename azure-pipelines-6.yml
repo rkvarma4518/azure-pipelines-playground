@@ -41,33 +41,41 @@ steps:
         echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
         echo ""
 
-        if (( total > 3 )); then
+        tags_to_delete=$(az acr repository show-tags \
+          --name "$(azure_registry)" \
+          --repository "$repo" \
+          --output tsv | grep -E '^(dev|test)$')
+
+        echo "$tags_to_delete"
+
+
+        # if (( total > 3 )); then
           # digests_to_delete=$(echo "$sorted_images" | jq -r '.[3:][] | .digest')
-          digests_to_delete=$(echo "$sorted_images" | jq -r '
-            .[] |
-            {
-              digest: .digest,
-              ts: .timestamp,
-              group:
-                (if (.tags | any(startswith("qa."))) then "qa"
-                elif (.tags | any(startswith("prod."))) then "prod"
-                else "other"
-                end)
-            } |
-            [.group, .digest] | @tsv
-          ' | awk '
-          {
-            group=$1
-            digest=$2
+          # digests_to_delete=$(echo "$sorted_images" | jq -r '
+          #   .[] |
+          #   {
+          #     digest: .digest,
+          #     ts: .timestamp,
+          #     group:
+          #       (if (.tags | any(startswith("qa."))) then "qa"
+          #       elif (.tags | any(startswith("prod."))) then "prod"
+          #       else "other"
+          #       end)
+          #   } |
+          #   [.group, .digest] | @tsv
+          # ' | awk '
+          # {
+          #   group=$1
+          #   digest=$2
 
-            if (!seen[digest]++) {
-              count[group]++
-              if (count[group] > 3)
-                print digest
-            }
-          }')
+          #   if (!seen[digest]++) {
+          #     count[group]++
+          #     if (count[group] > 3)
+          #       print digest
+          #   }
+          # }')
 
-          echo "$digests_to_delete"
+          # echo "$digests_to_delete"
           # for digest in $digests_to_delete; do
             # echo "🗑️ Deleting image digest: $digest"
             # az acr repository delete --name "$(azure_registry)" --image "$repo@$digest" --yes 2>&1 | grep -v "^WARNING"

@@ -43,8 +43,8 @@ steps:
 
         if (( total > 3 )); then
           # digests_to_delete=$(echo "$sorted_images" | jq -r '.[3:][] | .digest')
-          digests_to_delete=$(echo "$sorted_images" | jq -r '
-          echo "$sorted_images" | jq -r '
+          digests_to_delete=$(
+          echo "$sorted_images" | jq -r <<'JQ'
             .[] |
             {
               digest: .digest,
@@ -57,7 +57,8 @@ steps:
                 end)
             } |
             [.group, .digest, (.tags | join(","))] | @tsv
-          ' | awk '
+          JQ
+          | awk '
           {
             group  = $1
             digest = $2
@@ -72,7 +73,9 @@ steps:
               }
             }
           }
-          ')
+          '
+          )
+
 
           echo "$digests_to_delete"
           # for digest in $digests_to_delete; do

@@ -9,11 +9,11 @@ variables:
 # List of 5 public DockerHub images
 - name: dockerHubImages
   value: |
-    nginx:alpine
-    redis:latest
-    httpd:2.4
-    alpine:latest
-    busybox:latest
+    mysql:8.0
+    postgres:15
+    mongo:7
+    node:20-alpine
+    python:3.12-slim
 
 # Repository name in ACR where all images will be pushed
 - name: acrRepository

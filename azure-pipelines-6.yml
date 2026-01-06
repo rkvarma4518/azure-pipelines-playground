@@ -43,7 +43,7 @@ steps:
 
         if (( total > 3 )); then
           # digests_to_delete=$(echo "$sorted_images" | jq -r '.[3:][] | .digest')
-          digests_to_delete=$(echo "$sorted_images" | awk ' { digest=$1 tag=$3 if (tag ~ /^qa\./) group="qa" else if (tag ~ /^prod\./) group="prod" else group="other" count[group]++ if (count[group] > 3) print digest } ')
+          digests_to_delete=$(echo "$sorted_images" | awk '{ digest=$1; tag=$3; if (tag ~ /^qa\./) group="qa"; else if (tag ~ /^prod\./) group="prod"; else group="other"; count[group]++; if (count[group] > 3) print digest }')
           echo "$digests_to_delete"
           # for digest in $digests_to_delete; do
           #   echo "🗑️ Deleting image digest: $digest"

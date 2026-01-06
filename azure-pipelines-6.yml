@@ -66,21 +66,21 @@ steps:
                 print digest
             }
           }')
-          # echo "$digests_to_delete"
-          for digest in $digests_to_delete; do
+          echo "$digests_to_delete"
+          # for digest in $digests_to_delete; do
             echo "🗑️ Deleting image digest: $digest"
-            az acr repository delete --name "$(azure_registry)" --image "$repo@$digest" --yes 2>&1 | grep -v "^WARNING"
-          done
+            # az acr repository delete --name "$(azure_registry)" --image "$repo@$digest" --yes 2>&1 | grep -v "^WARNING"
+          # done
           
-          images=$(az acr repository show-manifests \
-            --name '$(azure_registry)' \
-            --repository $repo \
-            --output json)
-          sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')
-          echo ""
-          echo "Remaining 3 Images (digest timestamp tags):"
-          echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
-          echo ""
+          # images=$(az acr repository show-manifests \
+          #   --name '$(azure_registry)' \
+          #   --repository $repo \
+          #   --output json)
+          # sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')
+          # echo ""
+          # echo "Remaining 3 Images (digest timestamp tags):"
+          # echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
+          # echo ""
 
         else
           echo "✅ Nothing to delete. Only $total image(s) exist in $repo."

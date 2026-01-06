@@ -48,22 +48,23 @@ steps:
             {
               digest: .digest,
               ts: .timestamp,
+              tag: .tags,
               group:
                 (if (.tags | any(startswith("qa."))) then "qa"
                 elif (.tags | any(startswith("prod."))) then "prod"
                 else "other"
                 end)
             } |
-            [.group, .digest] | @tsv
+            [.group, .tag] | @tsv
           ' | awk '
           {
             group=$1
-            digest=$2
+            tag=$2
 
-            if (!seen[digest]++) {
+            if (!seen[tag]++) {
               count[group]++
               if (count[group] > 3)
-                print digest
+                print tag
             }
           }')
           echo "$digests_to_delete"

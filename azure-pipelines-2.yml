@@ -40,7 +40,7 @@ steps:
     count=1
     echo "$(dockerHubImages)" | while read image; do
       if [ -n "$image" ]; then
-        tagName=qa.3$count
+        tagName=qa.$count
         docker tag $image $(azure_registry).azurecr.io/$(acrRepository):$tagName
         count=$((count + 1))
       fi
@@ -54,7 +54,7 @@ steps:
     count=1
     echo "$(dockerHubImages)" | while read image; do
       if [ -n "$image" ]; then
-        tagName=qa.3$count
+        tagName=qa.$count
         docker push $(azure_registry).azurecr.io/$(acrRepository):$tagName
         count=$((count + 1))
       fi

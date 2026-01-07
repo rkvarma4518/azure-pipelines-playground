@@ -38,7 +38,7 @@ steps:
         echo "🔢 Total images : $total"
         echo ""
         echo "All Images (digest timestamp tags): "
-        # echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
+        echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
         echo ""
 
         tags_to_delete=$(az acr repository show-tags \
@@ -48,7 +48,7 @@ steps:
 
         TAGS_SORTED=$(echo "$tags_to_delete" | jq -r 'sort_by(.lastUpdateTime) | reverse | .[] | "\(.digest) \(.lastUpdateTime) \(.name)"')
         # total=$(echo "$TAGS_SORTED" | jq length)
-        echo "$tags_to_delete"
+        # echo "$TAGS_SORTED"
 
 
         if (( total > 3 )); then
@@ -76,8 +76,10 @@ steps:
           }')
 
           echo ""
-          # echo "$tags_to_delete_final"
+          echo "$tags_to_delete_final"
+          echo ""
           for tag in $tags_to_delete_final; do
+            echo "🗑️ Deleting image tag: $tag"
             az acr repository delete \
               --name "$(azure_registry)" \
               --image "$repo:$tag" \

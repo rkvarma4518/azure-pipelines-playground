@@ -10,10 +10,6 @@ variables:
 - name: dockerHubImages
   value: |
     openjdk:21-jdk-slim
-    ubuntu:22.04
-    debian:bookworm-slim
-    traefik:v3.0
-    rabbitmq:3-management
 
 # Repository name in ACR where all images will be pushed
 - name: acrRepository

@@ -80,10 +80,10 @@ steps:
           echo ""
           for tag in $tags_to_delete_final; do
             echo "🗑️ Deleting image tag: $tag"
-            az acr repository delete \
-              --name "$(azure_registry)" \
-              --image "$repo:$tag" \
-              --yes 2>&1 | grep -v "^WARNING"
+            # az acr repository delete \
+            #   --name "$(azure_registry)" \
+            #   --image "$repo:$tag" \
+            #   --yes 2>&1 | grep -v "^WARNING"
           done
 
 
@@ -92,10 +92,10 @@ steps:
           #   az acr repository delete --name "$(azure_registry)" --image "$repo@$digest" --yes 2>&1 | grep -v "^WARNING"
           # done
           
-          # tags_to_delete=$(az acr repository show-tags \
-          #   --name $(azure_registry) \
-          #   --repository $repo \
-          #   --detail)
+          tags_to_delete=$(az acr repository show-tags \
+            --name $(azure_registry) \
+            --repository $repo \
+            --detail)
 
           TAGS_SORTED=$(echo "$tags_to_delete" | jq -r 'sort_by(.lastUpdateTime) | reverse | .[] | "\(.digest) \(.lastUpdateTime) \(.name)"')
           echo ""

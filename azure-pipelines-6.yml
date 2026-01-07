@@ -46,8 +46,9 @@ steps:
           --repository $repo \
           --detail)
 
+        TAGS_SORTED=$(echo "$tags_to_delete" | jq -r 'sort_by(.lastUpdateTime) | reverse | .[] | "\(.digest) \(.lastUpdateTime) \(.name)"')
 
-        echo "$tags_to_delete"
+        echo "$TAGS_SORTED"
 
 
         # if (( total > 3 )); then

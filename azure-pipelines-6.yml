@@ -38,7 +38,7 @@ steps:
         echo "🔢 Total images : $total"
         echo ""
         echo "All Images (digest timestamp tags): "
-        echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
+        # echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
         echo ""
 
         tags_to_delete=$(az acr repository show-tags \
@@ -75,6 +75,7 @@ steps:
               print tag
           }')
 
+          echo ""
           echo "$tags_to_delete_final"
           # for digest in $digests_to_delete; do
           #   echo "🗑️ Deleting image digest: $digest"

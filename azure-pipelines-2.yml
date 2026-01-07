@@ -9,11 +9,7 @@ variables:
 # List of 5 public DockerHub images
 - name: dockerHubImages
   value: |
-    mysql:8.0
-    postgres:15
-    mongo:7
-    node:20-alpine
-    python:3.12-slim
+    ubuntu:22.04
 
 # Repository name in ACR where all images will be pushed
 - name: acrRepository
@@ -43,7 +39,7 @@ steps:
     count=1
     echo "$(dockerHubImages)" | while read image; do
       if [ -n "$image" ]; then
-        tagName=$count
+        tagName=qa.1$count
         docker tag $image $(azure_registry).azurecr.io/$(acrRepository):$tagName
         count=$((count + 1))
       fi
@@ -57,7 +53,7 @@ steps:
     count=1
     echo "$(dockerHubImages)" | while read image; do
       if [ -n "$image" ]; then
-        tagName=$count
+        tagName=qa.1$count
         docker push $(azure_registry).azurecr.io/$(acrRepository):$tagName
         count=$((count + 1))
       fi

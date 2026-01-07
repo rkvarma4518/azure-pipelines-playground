@@ -82,10 +82,10 @@ steps:
           # echo ""
           for tag in $tags_to_delete_final; do
             echo "🗑️ Deleting image tag: $tag"
-            # az acr repository delete \
-            #   --name "$(azure_registry)" \
-            #   --image "$repo:$tag" \
-            #   --yes 2>&1 | grep -v "^WARNING"
+            az acr repository delete \
+              --name "$(azure_registry)" \
+              --image "$repo:$tag" \
+              --yes 2>&1 | grep -v "^WARNING"
           done
 
 

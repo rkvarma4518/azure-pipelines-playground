@@ -26,19 +26,19 @@ steps:
       for repo in "${repos[@]}"; do
         echo "📦 Processing repository : $repo"
 
-        # images=$(az acr repository show-manifests \
-        #   --name '$(azure_registry)' \
-        #   --repository $repo \
-        #   --output json)
+        images=$(az acr repository show-manifests \
+          --name '$(azure_registry)' \
+          --repository $repo \
+          --output json)
 
-        # sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')
-        # total=$(echo "$sorted_images" | jq length)
+        sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')
+        total=$(echo "$sorted_images" | jq length)
 
-        # echo ""
-        # echo "🔢 Total images : $total"
-        # echo ""
-        # echo "All Images (digest timestamp tags): "
-        # echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
+        echo ""
+        echo "🔢 Total images : $total"
+        echo ""
+        echo "All Images (digest timestamp tags): "
+        echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
         echo ""
 
         tags_to_delete=$(az acr repository show-tags \
@@ -47,7 +47,7 @@ steps:
           --detail)
 
         TAGS_SORTED=$(echo "$tags_to_delete" | jq -r 'sort_by(.lastUpdateTime) | reverse | .[] | "\(.digest) \(.lastUpdateTime) \(.name)"')
-        total=$(echo "$TAGS_SORTED" | jq length)
+        # total=$(echo "$TAGS_SORTED" | jq length)
         echo "$TAGS_SORTED"
 
 

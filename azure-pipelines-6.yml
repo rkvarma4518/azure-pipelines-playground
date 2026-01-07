@@ -44,7 +44,7 @@ steps:
         tags_to_delete=$(az acr repository show-tags \
           --name $(azure_registry) \
           --repository $repo \
-          --detail
+          --detail)
 
 
         echo "$tags_to_delete"

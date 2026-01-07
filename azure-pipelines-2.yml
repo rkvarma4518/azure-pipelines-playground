@@ -11,9 +11,6 @@ variables:
   value: |
     openjdk:21-jdk-slim
     ubuntu:22.04
-    debian:bookworm-slim
-    traefik:v3.0
-    rabbitmq:3-management
 
 # Repository name in ACR where all images will be pushed
 - name: acrRepository
@@ -43,7 +40,7 @@ steps:
     count=1
     echo "$(dockerHubImages)" | while read image; do
       if [ -n "$image" ]; then
-        tagName=qa.1$count
+        tagName=qa.2$count
         docker tag $image $(azure_registry).azurecr.io/$(acrRepository):$tagName
         count=$((count + 1))
       fi
@@ -57,7 +54,7 @@ steps:
     count=1
     echo "$(dockerHubImages)" | while read image; do
       if [ -n "$image" ]; then
-        tagName=qa.1$count
+        tagName=qa.2$count
         docker push $(azure_registry).azurecr.io/$(acrRepository):$tagName
         count=$((count + 1))
       fi

@@ -26,19 +26,19 @@ steps:
       for repo in "${repos[@]}"; do
         echo "📦 Processing repository : $repo"
 
-        images=$(az acr repository show-manifests \
-          --name '$(azure_registry)' \
-          --repository $repo \
-          --output json)
+        # images=$(az acr repository show-manifests \
+        #   --name '$(azure_registry)' \
+        #   --repository $repo \
+        #   --output json)
 
-        sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')
-        total=$(echo "$sorted_images" | jq length)
+        # sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')
+        # total=$(echo "$sorted_images" | jq length)
 
-        echo ""
-        echo "🔢 Total images : $total"
-        echo ""
-        echo "All Images (digest timestamp tags): "
-        echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
+        # echo ""
+        # echo "🔢 Total images : $total"
+        # echo ""
+        # echo "All Images (digest timestamp tags): "
+        # echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
         echo ""
 
         tags_to_delete=$(az acr repository show-tags \
@@ -47,55 +47,56 @@ steps:
           --detail)
 
         TAGS_SORTED=$(echo "$tags_to_delete" | jq -r 'sort_by(.lastUpdateTime) | reverse | .[] | "\(.digest) \(.lastUpdateTime) \(.name)"')
-
+        total=$(echo "$TAGS_SORTED" | jq length)
         echo "$TAGS_SORTED"
 
 
-        # if (( total > 3 )); then
+        if (( total > 3 )); then
           # digests_to_delete=$(echo "$sorted_images" | jq -r '.[3:][] | .digest')
-          # digests_to_delete=$(echo "$sorted_images" | jq -r '
-          #   .[] |
-          #   {
-          #     digest: .digest,
-          #     ts: .timestamp,
-          #     group:
-          #       (if (.tags | any(startswith("qa."))) then "qa"
-          #       elif (.tags | any(startswith("prod."))) then "prod"
-          #       else "other"
-          #       end)
-          #   } |
-          #   [.group, .digest] | @tsv
-          # ' | awk '
-          # {
-          #   group=$1
-          #   digest=$2
+          digests_to_delete=$(echo "$TAGS_SORTED" | jq -r '
+            .[] |
+            {
+              digest: .digest,
+              ts: .timestamp,
+              group:
+                (if (.tags | any(startswith("qa."))) then "qa"
+                elif (.tags | any(startswith("prod."))) then "prod"
+                else "other"
+                end)
+            } |
+            [.group, .digest] | @tsv
+          ' | awk '
+          {
+            group=$1
+            digest=$2
 
-          #   if (!seen[digest]++) {
-          #     count[group]++
-          #     if (count[group] > 3)
-          #       print digest
-          #   }
-          # }')
+            if (!seen[digest]++) {
+              count[group]++
+              if (count[group] > 3)
+                print digest
+            }
+          }')
 
-          # echo "$digests_to_delete"
-          # for digest in $digests_to_delete; do
-            # echo "🗑️ Deleting image digest: $digest"
-            # az acr repository delete --name "$(azure_registry)" --image "$repo@$digest" --yes 2>&1 | grep -v "^WARNING"
-          # done
+          echo "$digests_to_delete"
+          for digest in $digests_to_delete; do
+            echo "🗑️ Deleting image digest: $digest"
+            az acr repository delete --name "$(azure_registry)" --image "$repo@$digest" --yes 2>&1 | grep -v "^WARNING"
+          done
           
-          # images=$(az acr repository show-manifests \
-          #   --name '$(azure_registry)' \
-          #   --repository $repo \
-          #   --output json)
-          # sorted_images=$(echo "$images" | jq 'sort_by(.timestamp) | reverse')
-          # echo ""
-          # echo "Remaining 3 Images (digest timestamp tags):"
-          # echo "$sorted_images" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
-          # echo ""
+          tags_to_delete=$(az acr repository show-tags \
+            --name $(azure_registry) \
+            --repository $repo \
+            --detail)
 
-        # else
-        #   echo "✅ Nothing to delete. Only $total image(s) exist in $repo."
-        # fi
+          TAGS_SORTED=$(echo "$tags_to_delete" | jq -r 'sort_by(.lastUpdateTime) | reverse | .[] | "\(.digest) \(.lastUpdateTime) \(.name)"')
+          echo ""
+          echo "Remaining 3 Images (digest timestamp tags):"
+          echo "$TAGS_SORTED" | jq -r '.[] | "\(.digest) \(.timestamp) \(.tags | if length > 0 then join(",") else "No_tag" end)"'
+          echo ""
+
+        else
+          echo "✅ Nothing to delete. Only $total image(s) exist in $repo."
+        fi
       done
 
       echo "🎉 Cleanup complete for all repositories!"

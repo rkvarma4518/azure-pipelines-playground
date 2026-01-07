@@ -48,7 +48,9 @@ steps:
 
         TAGS_SORTED=$(echo "$tags_to_delete" | jq -r 'sort_by(.lastUpdateTime) | reverse | .[] | "\(.digest) \(.lastUpdateTime) \(.name)"')
         # total=$(echo "$TAGS_SORTED" | jq length)
-        # echo "$TAGS_SORTED"
+        echo ""
+        echo "$TAGS_SORTED"
+        echo ""
 
 
         if (( total > 3 )); then

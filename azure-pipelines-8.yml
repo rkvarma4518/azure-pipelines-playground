@@ -74,15 +74,13 @@ steps:
 #         --output=codeql-results.sarif \
 #         codeql/python-queries
 
-# Step 3: Analyze database
 - task: Bash@3
   displayName: Run CodeQL Analysis
   inputs:
     targetType: inline
     script: |
-      cd your-repo
+      cd $(Build.SourcesDirectory)
       codeql database analyze codeql-db \
-        --language=python \
         --format=sarifv2.1.0 \
         --output=codeql-results.sarif
 

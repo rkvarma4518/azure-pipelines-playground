@@ -53,18 +53,38 @@ steps:
         --language=python \
         --source-root=.
 
+- task: Bash@3
+  displayName: Install CodeQL Python pack
+  inputs:
+    targetType: inline
+    script: |
+      export PATH=$PATH:/opt/codeql
+      codeql pack install codeql/python-all
+
 # -------------------------
 # Analyze Code
 # -------------------------
+# - task: Bash@3
+#   displayName: Run CodeQL Analysis
+#   inputs:
+#     targetType: inline
+#     script: |
+#       codeql database analyze codeql-db \
+#         --format=sarifv2.1.0 \
+#         --output=codeql-results.sarif \
+#         codeql/python-queries
+
 - task: Bash@3
   displayName: Run CodeQL Analysis
   inputs:
     targetType: inline
     script: |
+      export PATH=$PATH:/opt/codeql
       codeql database analyze codeql-db \
         --format=sarifv2.1.0 \
         --output=codeql-results.sarif \
-        codeql/python-queries
+        python-all
+
 
 # -------------------------
 # Publish Results

@@ -61,6 +61,8 @@ steps:
     targetType: inline
     script: |
       cd $(Build.SourcesDirectory)
+      rm -rf $(Build.SourcesDirectory)/codeql
+
       git clone https://github.com/github/codeql.git
       ls codeql/python-queries  # sanity check
 

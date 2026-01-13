@@ -64,9 +64,9 @@ steps:
     targetType: inline
     script: |
       wget https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip
-      unzip codeql-linux64.zip
-      chmod +x codeql/codeql
-      echo "##vso[task.prependpath]$(pwd)/codeql"
+      unzip codeql-linux64.zip -d codeql-cli
+      chmod +x codeql-cli/codeql
+      echo "##vso[task.prependpath]$(pwd)/codeql-cli"
 
 - task: Bash@3
   displayName: Download CodeQL Queries

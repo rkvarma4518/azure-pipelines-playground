@@ -58,7 +58,7 @@ steps:
       codeql database analyze codeql-db \
         --format=sarifv2.1.0 \
         --output=codeql-results.sarif \
-        codeql/java-queries
+        codeql/python-queries
 
 # -------------------------
 # Publish Results

@@ -56,9 +56,10 @@ steps:
 #     targetPath: codeql-results.sarif
 #     artifactName: CodeQL-SARIF
 
-# 1️⃣ Download CodeQL CLI
+
+
 - task: Bash@3
-  displayName: Download CodeQL
+  displayName: Download CodeQL CLI
   inputs:
     targetType: inline
     script: |
@@ -67,7 +68,13 @@ steps:
       chmod +x codeql/codeql
       echo "##vso[task.prependpath]$(pwd)/codeql"
 
-# 2️⃣ Create CodeQL database (NO BUILD)
+- task: Bash@3
+  displayName: Download CodeQL Queries
+  inputs:
+    targetType: inline
+    script: |
+      git clone https://github.com/github/codeql.git
+
 - task: Bash@3
   displayName: Create CodeQL Database
   inputs:
@@ -77,20 +84,17 @@ steps:
         --language=python \
         --source-root .
 
-# 3️⃣ Analyze database
 - task: Bash@3
   displayName: Run CodeQL Analysis
   inputs:
     targetType: inline
     script: |
       codeql database analyze codeql-db \
+        ./codeql/python/ql/src/codeql-suites/python-security-and-quality.qls \
         --format=sarif-latest \
-        --output=codeql-results.sarif \
-        codeql/python-queries
+        --output=codeql-results.sarif
 
-# 4️⃣ Publish SARIF
 - task: PublishPipelineArtifact@1
-  displayName: Publish CodeQL SARIF
   inputs:
     targetPath: codeql-results.sarif
     artifactName: CodeQL-SARIF

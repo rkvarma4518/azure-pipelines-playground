@@ -4,24 +4,28 @@ pr: none
 
 resources:
   repositories:
-    - repository: githubRepo
+    - repository: SourceRepo
       type: github
       name: rkvarma1845/Hear-Check
       ref: refs/heads/main
       endpoint: 'github connection 1'
 
-pool:
-  vmImage: ubuntu-latest
+jobs:
+  - job: "CodeQLScan"
+    displayName: "CodeQL Scanning with Inferred Publishing"
+    variables:
+      # Enable repository inference
+      advancedsecurity.publish.repository.infer: true
+    steps:
+      # Checkout the SourceRepo
+      - checkout: SourceRepo
 
+      # Initialize CodeQL
+      - task: AdvancedSecurity-Codeql-Init@1
+        displayName: "Initialize CodeQL"
+        inputs:
+          languages: "python"
 
-steps:
-  - checkout: githubRepo
-  - task: AdvancedSecurity-Codeql-Init@1
-    inputs:
-      languages: 'python'
-      enableAutomaticCodeQLInstall: true
-      querysuite: 'security-extended'
-
-  - task: AdvancedSecurity-Codeql-Analyze@1
-    inputs:
-      buildtype: 'None'
+      # Perform CodeQL analysis
+      - task: AdvancedSecurity-Codeql-Analyze@1
+        displayName: "Analyze Code with CodeQL"

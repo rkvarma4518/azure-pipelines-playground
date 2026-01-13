@@ -13,93 +13,15 @@ resources:
 pool:
   vmImage: ubuntu-latest
 
+
 steps:
-# Checkout resource repo (NOT self)
-- checkout: githubRepo
+  - checkout: githubRepo
+  - task: AdvancedSecurity-Codeql-Init@1
+    inputs:
+      languages: 'python'
+      enableAutomaticCodeQLInstall: true
+      querysuite: 'security-extended'
 
-# # 1️⃣ Download CodeQL CLI
-# - task: Bash@3
-#   displayName: Download CodeQL
-#   inputs:
-#     targetType: inline
-#     script: |
-#       wget https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip
-#       unzip codeql-linux64.zip
-#       chmod +x codeql/codeql
-#       echo "##vso[task.prependpath]$(pwd)/codeql"
-
-# # 2️⃣ Create CodeQL database
-# - task: Bash@3
-#   displayName: Create CodeQL Database
-#   inputs:
-#     targetType: inline
-#     script: |
-#       codeql database create codeql-db \
-#         --language=java \
-#         --source-root .
-
-# # 3️⃣ Analyze database (generate SARIF)
-# - task: Bash@3
-#   displayName: Run CodeQL Analysis
-#   inputs:
-#     targetType: inline
-#     script: |
-#       codeql database analyze codeql-db \
-#         --format=sarif-latest \
-#         --output=codeql-results.sarif \
-#         codeql/java-queries
-
-# # 4️⃣ Publish SARIF
-# - task: PublishPipelineArtifact@1
-#   displayName: Publish CodeQL SARIF
-#   inputs:
-#     targetPath: codeql-results.sarif
-#     artifactName: CodeQL-SARIF
-
-
-# 1️⃣ Download CodeQL CLI (separate folder)
-- task: Bash@3
-  displayName: Download CodeQL CLI
-  inputs:
-    targetType: inline
-    script: |
-      wget https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip
-      unzip codeql-linux64.zip -d codeql-cli
-      chmod +x codeql-cli/codeql
-      echo "##vso[task.prependpath]$(pwd)/codeql-cli"
-
-# 2️⃣ Download CodeQL Queries (separate folder)
-- task: Bash@3
-  displayName: Download CodeQL Queries
-  inputs:
-    targetType: inline
-    script: |
-      git clone --depth 1 https://github.com/github/codeql.git codeql-queries
-
-# 3️⃣ Create CodeQL database (Python → NO BUILD)
-- task: Bash@3
-  displayName: Create CodeQL Database
-  inputs:
-    targetType: inline
-    script: |
-      codeql database create codeql-db \
-        --language=python \
-        --source-root .
-
-# 4️⃣ Run CodeQL analysis (GitHub-equivalent query suite)
-- task: Bash@3
-  displayName: Run CodeQL Analysis
-  inputs:
-    targetType: inline
-    script: |
-      codeql database analyze codeql-db \
-        ./codeql-queries/python/ql/src/codeql-suites/python-security-and-quality.qls \
-        --format=sarif-latest \
-        --output=codeql-results.sarif
-
-# 5️⃣ Publish SARIF to Azure DevOps
-- task: PublishPipelineArtifact@1
-  displayName: Publish CodeQL SARIF
-  inputs:
-    targetPath: codeql-results.sarif
-    artifactName: CodeQL-SARIF
+  - task: AdvancedSecurity-Codeql-Analyze@1
+    inputs:
+      buildtype: 'None'

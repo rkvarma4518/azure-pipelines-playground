@@ -53,13 +53,13 @@ steps:
         --language=python \
         --source-root=.
 
-- task: Bash@3
-  displayName: Install CodeQL Python pack
-  inputs:
-    targetType: inline
-    script: |
-      export PATH=$PATH:/opt/codeql
-      codeql pack install codeql/python-all
+# - task: Bash@3
+#   displayName: Install CodeQL Python pack
+#   inputs:
+#     targetType: inline
+#     script: |
+#       export PATH=$PATH:/opt/codeql
+#       codeql pack install codeql/python-all
 
 # -------------------------
 # Analyze Code

@@ -64,7 +64,7 @@ steps:
       rm -rf $(Build.SourcesDirectory)/codeql
 
       git clone https://github.com/github/codeql.git
-      ls codeql/python-queries  # sanity check
+      ls codeql/python  # sanity check
 
 # -------------------------
 # Analyze Code

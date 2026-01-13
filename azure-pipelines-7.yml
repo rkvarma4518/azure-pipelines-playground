@@ -10,22 +10,18 @@ resources:
       ref: refs/heads/main
       endpoint: 'github connection 1'
 
-jobs:
-  - job: "CodeQLScan"
-    displayName: "CodeQL Scanning with Inferred Publishing"
-    variables:
-      # Enable repository inference
-      advancedsecurity.publish.repository.infer: true
-    steps:
-      # Checkout the SourceRepo
-      - checkout: SourceRepo
+steps:
+- checkout: SourceRepo
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
 
-      # Initialize CodeQL
-      - task: AdvancedSecurity-Codeql-Init@1
-        displayName: "Initialize CodeQL"
-        inputs:
-          languages: "python"
+- script: |
+    pip install bandit
+    bandit -r . -f sarif -o bandit.sarif
+  displayName: Run Bandit Scan
 
-      # Perform CodeQL analysis
-      - task: AdvancedSecurity-Codeql-Analyze@1
-        displayName: "Analyze Code with CodeQL"
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: bandit.sarif
+    artifactName: SecurityReports

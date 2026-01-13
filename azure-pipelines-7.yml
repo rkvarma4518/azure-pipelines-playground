@@ -8,7 +8,7 @@ resources:
       type: github
       name: rkvarma1845/Hear-Check
       ref: refs/heads/main
-      endpoint: GitHub-Service-Connection
+      endpoint: 'github connection 1'
 
 pool:
   vmImage: ubuntu-latest

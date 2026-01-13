@@ -57,7 +57,7 @@ steps:
 #     artifactName: CodeQL-SARIF
 
 
-
+# 1️⃣ Download CodeQL CLI (separate folder)
 - task: Bash@3
   displayName: Download CodeQL CLI
   inputs:
@@ -68,13 +68,15 @@ steps:
       chmod +x codeql-cli/codeql
       echo "##vso[task.prependpath]$(pwd)/codeql-cli"
 
+# 2️⃣ Download CodeQL Queries (separate folder)
 - task: Bash@3
   displayName: Download CodeQL Queries
   inputs:
     targetType: inline
     script: |
-      git clone https://github.com/github/codeql.git
+      git clone --depth 1 https://github.com/github/codeql.git codeql-queries
 
+# 3️⃣ Create CodeQL database (Python → NO BUILD)
 - task: Bash@3
   displayName: Create CodeQL Database
   inputs:
@@ -84,17 +86,20 @@ steps:
         --language=python \
         --source-root .
 
+# 4️⃣ Run CodeQL analysis (GitHub-equivalent query suite)
 - task: Bash@3
   displayName: Run CodeQL Analysis
   inputs:
     targetType: inline
     script: |
       codeql database analyze codeql-db \
-        ./codeql/python/ql/src/codeql-suites/python-security-and-quality.qls \
+        ./codeql-queries/python/ql/src/codeql-suites/python-security-and-quality.qls \
         --format=sarif-latest \
         --output=codeql-results.sarif
 
+# 5️⃣ Publish SARIF to Azure DevOps
 - task: PublishPipelineArtifact@1
+  displayName: Publish CodeQL SARIF
   inputs:
     targetPath: codeql-results.sarif
     artifactName: CodeQL-SARIF

@@ -87,7 +87,8 @@ steps:
       cd $(Build.SourcesDirectory)/linkpeek
       codeql database analyze codeql-db \
         --format=sarifv2.1.0 \
-        --output=codeql-results.sarif
+        --output=codeql-results.sarif \
+        codeql/python
 
 
 # -------------------------

@@ -1,0 +1,57 @@
+trigger: none
+
+pr: none
+
+resources:
+  repositories:
+    - repository: githubRepo
+      type: github
+      name: rkvarma1845/Hear-Check
+      ref: refs/heads/main
+      endpoint: GitHub-Service-Connection
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+# Checkout resource repo (NOT self)
+- checkout: githubRepo
+
+# 1️⃣ Download CodeQL CLI
+- task: Bash@3
+  displayName: Download CodeQL
+  inputs:
+    targetType: inline
+    script: |
+      wget https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip
+      unzip codeql-linux64.zip
+      chmod +x codeql/codeql
+      echo "##vso[task.prependpath]$(pwd)/codeql"
+
+# 2️⃣ Create CodeQL database
+- task: Bash@3
+  displayName: Create CodeQL Database
+  inputs:
+    targetType: inline
+    script: |
+      codeql database create codeql-db \
+        --language=java \
+        --source-root .
+
+# 3️⃣ Analyze database (generate SARIF)
+- task: Bash@3
+  displayName: Run CodeQL Analysis
+  inputs:
+    targetType: inline
+    script: |
+      codeql database analyze codeql-db \
+        --format=sarif-latest \
+        --output=codeql-results.sarif \
+        codeql/java-queries
+
+# 4️⃣ Publish SARIF
+- task: PublishPipelineArtifact@1
+  displayName: Publish CodeQL SARIF
+  inputs:
+    targetPath: codeql-results.sarif
+    artifactName: CodeQL-SARIF

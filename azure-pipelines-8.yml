@@ -1,0 +1,70 @@
+trigger:
+- none
+
+pr:
+- none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  CODEQL_VERSION: '2.16.4'
+
+resources:
+  repositories:
+  - repository: resourceRepo
+    type: github
+    name: rkvarma4518/linkpeek
+    ref: main
+    endpoint: 'github connection 1'
+
+
+steps:
+- checkout: resourceRepo
+
+# -------------------------
+# Install CodeQL
+# -------------------------
+- task: Bash@3
+  displayName: Install CodeQL
+  inputs:
+    targetType: inline
+    script: |
+      wget https://github.com/github/codeql-cli-binaries/releases/download/v$(CODEQL_VERSION)/codeql-linux64.zip
+      unzip codeql-linux64.zip
+      sudo mv codeql /usr/local/bin/codeql
+      codeql version
+
+# -------------------------
+# Create CodeQL Database
+# -------------------------
+- task: Bash@3
+  displayName: Create CodeQL Database
+  inputs:
+    targetType: inline
+    script: |
+      codeql database create codeql-db \
+        --language=java \
+        --source-root=.
+
+# -------------------------
+# Analyze Code
+# -------------------------
+- task: Bash@3
+  displayName: Run CodeQL Analysis
+  inputs:
+    targetType: inline
+    script: |
+      codeql database analyze codeql-db \
+        --format=sarifv2.1.0 \
+        --output=codeql-results.sarif \
+        codeql/java-queries
+
+# -------------------------
+# Publish Results
+# -------------------------
+- task: PublishBuildArtifacts@1
+  displayName: Publish CodeQL Report
+  inputs:
+    pathToPublish: codeql-results.sarif
+    artifactName: CodeQL-Report

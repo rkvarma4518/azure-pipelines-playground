@@ -56,15 +56,11 @@ steps:
 
 # Clone official query packs
 - task: Bash@3
-  displayName: Clone CodeQL query packs
+  displayName: Install Python Query Pack
   inputs:
     targetType: inline
     script: |
-      cd $(Build.SourcesDirectory)
-      rm -rf $(Build.SourcesDirectory)/codeql
-
-      git clone https://github.com/github/codeql.git
-      ls codeql/python  # sanity check
+      codeql pack install codeql/python-all
 
 # -------------------------
 # Analyze Code
@@ -88,7 +84,6 @@ steps:
       codeql database analyze codeql-db \
         --format=sarifv2.1.0 \
         --output=codeql-results.sarif \
-        --codeql/python
 
 
 # -------------------------

@@ -84,11 +84,11 @@ steps:
   inputs:
     targetType: inline
     script: |
-      cd $(Build.SourcesDirectory)/linkpeek
+      cd $(Build.SourcesDirectory)
       codeql database analyze codeql-db \
         --format=sarifv2.1.0 \
         --output=codeql-results.sarif \
-        codeql/python
+        --codeql/python
 
 
 # -------------------------
@@ -97,5 +97,5 @@ steps:
 - task: PublishBuildArtifacts@1
   displayName: Publish CodeQL Report
   inputs:
-    pathToPublish: linkpeek/codeql-results.sarif
+    pathToPublish: codeql-results.sarif
     artifactName: CodeQL-Report

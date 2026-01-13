@@ -18,10 +18,21 @@ steps:
 
 - script: |
     pip install bandit
-    bandit -r . -f sarif -o bandit.sarif
+    bandit -r . -f json -o bandit.json
   displayName: Run Bandit Scan
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathToPublish: bandit.sarif
-    artifactName: SecurityReports
+- script: |
+    python - <<EOF
+    import json, sys
+    with open("bandit.json") as f:
+        data = json.load(f)
+
+    high = [i for i in data["results"] if i["issue_severity"] in ("HIGH", "MEDIUM")]
+
+    if high:
+        print(f"❌ Security issues found: {len(high)}")
+        sys.exit(1)
+    else:
+        print("✅ No high/medium issues")
+    EOF
+  displayName: Fail on High/Medium

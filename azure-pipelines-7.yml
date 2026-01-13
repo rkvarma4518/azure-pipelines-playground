@@ -21,6 +21,13 @@ steps:
     bandit -r . -f json -o bandit.json --exit-zero
   displayName: Run Bandit Scan
 
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: bandit.json
+    artifact: BanditReport
+    publishLocation: pipeline
+  displayName: Publish Bandit Report
+
 - script: |
     python - <<EOF
     import json, sys
@@ -36,10 +43,3 @@ steps:
         print("✅ No high/medium issues")
     EOF
   displayName: Fail on High/Medium
-
-- task: PublishPipelineArtifact@1
-  inputs:
-    targetPath: bandit.json
-    artifact: BanditReport
-    publishLocation: pipeline
-  displayName: Publish Bandit Report

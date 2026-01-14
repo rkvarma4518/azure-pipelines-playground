@@ -87,3 +87,11 @@ steps:
   inputs:
     pathToPublish: codeql-results.sarif
     artifactName: CodeQL-Report
+
+
+- task: AdvancedSecurity-Publish@1
+  inputs:
+    EnableRecursiveScanning: true
+    WaitForProcessing: true
+    WaitForProcessingTimeout: 15
+

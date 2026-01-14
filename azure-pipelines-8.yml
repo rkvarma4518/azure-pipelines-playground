@@ -89,9 +89,19 @@ steps:
     artifactName: CodeQL-Report
 
 
+# Optional but recommended
+- script: |
+    python --version
+  displayName: 'Check Python'
+
+# CodeQL analyze
+- task: AdvancedSecurity-Codeql-Analyze@1
+  displayName: 'CodeQL Analyze (Python)'
+
+# Publish results
 - task: AdvancedSecurity-Publish@1
+  displayName: 'Publish CodeQL Results'
   inputs:
-    EnableRecursiveScanning: true
     WaitForProcessing: true
-    WaitForProcessingTimeout: 120
+    WaitForProcessingTimeout: 15
 

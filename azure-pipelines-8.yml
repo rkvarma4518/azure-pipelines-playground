@@ -9,7 +9,6 @@ pool:
 
 variables:
   CODEQL_VERSION: '2.16.4'
-  ADVANCED_SECURITY_CODEQL_LANGUAGES: python
 
 resources:
   repositories:
@@ -89,20 +88,25 @@ steps:
     pathToPublish: codeql-results.sarif
     artifactName: CodeQL-Report
 
-
-# Optional but recommended
-- script: |
-    python --version
-  displayName: 'Check Python'
-
-# CodeQL analyze
-- task: AdvancedSecurity-Codeql-Analyze@1
-  displayName: 'CodeQL Analyze (Python)'
-
-# Publish results
-- task: AdvancedSecurity-Publish@1
-  displayName: 'Publish CodeQL Results'
+# -------------------------
+# Publish CodeQL Results (Readable)
+# -------------------------
+- task: PowerShell@2
+  displayName: Filter SARIF results
   inputs:
-    WaitForProcessing: true
-    WaitForProcessingTimeout: 15
+    targetType: inline
+    script: |
+      $sarif = Get-Content codeql-results.sarif | ConvertFrom-Json
+      $issues = $sarif.runs.results | Where-Object {
+          $_.level -ne "none" -and -not ($_.locations[0].physicalLocation.artifactLocation.uri -like "codeql/*")
+      }
+      foreach ($i in $issues) {
+          Write-Host "File: $($i.locations[0].physicalLocation.artifactLocation.uri)"
+          Write-Host "Rule: $($i.descriptor.id)"
+          Write-Host "Message: $($i.message.text)"
+          Write-Host "Level: $($i.level)"
+          Write-Host "-----------------------"
+      }
+
+
 

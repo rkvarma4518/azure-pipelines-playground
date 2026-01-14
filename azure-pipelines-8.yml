@@ -40,6 +40,14 @@ steps:
 
       codeql version
 
+# Clone official query packs
+- task: Bash@3
+  displayName: Install Python Query Pack
+  inputs:
+    targetType: inline
+    script: |
+      codeql pack init codeql/python-queries
+      codeql pack install --dir codeql/python-queries
 
 # -------------------------
 # Create CodeQL Database
@@ -53,15 +61,6 @@ steps:
       codeql database create codeql-db \
         --language=python \
         --source-root=.
-
-# Clone official query packs
-- task: Bash@3
-  displayName: Install Python Query Pack
-  inputs:
-    targetType: inline
-    script: |
-      codeql pack init codeql/python-queries
-      codeql pack install --dir codeql/python-queries
 
 # -------------------------
 # Analyze Code

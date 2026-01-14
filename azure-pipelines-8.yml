@@ -9,6 +9,7 @@ pool:
 
 variables:
   CODEQL_VERSION: '2.16.4'
+  ADVANCED_SECURITY_CODEQL_LANGUAGES: python
 
 resources:
   repositories:

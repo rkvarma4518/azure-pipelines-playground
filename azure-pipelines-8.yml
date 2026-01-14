@@ -47,7 +47,7 @@ steps:
     targetType: inline
     script: |
       codeql pack init codeql/python-queries
-      codeql pack install --dir codeql/python-queries
+      codeql pack install
 
 # -------------------------
 # Create CodeQL Database

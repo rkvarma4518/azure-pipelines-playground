@@ -93,5 +93,5 @@ steps:
   inputs:
     EnableRecursiveScanning: true
     WaitForProcessing: true
-    WaitForProcessingTimeout: 15
+    WaitForProcessingTimeout: 120
 

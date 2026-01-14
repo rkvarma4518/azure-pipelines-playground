@@ -47,7 +47,8 @@ steps:
     targetType: inline
     script: |
       codeql pack init codeql/python-queries
-      ls -R   
+      # ls -R   
+      cd python-queries/
       codeql pack install
 
 # -------------------------

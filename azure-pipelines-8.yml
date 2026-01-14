@@ -60,20 +60,12 @@ steps:
   inputs:
     targetType: inline
     script: |
-      codeql pack install codeql/python-all
+      codeql pack init codeql/python-queries
+      codeql pack install codeql/python-queries
 
 # -------------------------
 # Analyze Code
 # -------------------------
-# - task: Bash@3
-#   displayName: Run CodeQL Analysis
-#   inputs:
-#     targetType: inline
-#     script: |
-#       codeql database analyze codeql-db \
-#         --format=sarifv2.1.0 \
-#         --output=codeql-results.sarif \
-#         codeql/python-queries
 
 - task: Bash@3
   displayName: Run CodeQL Analysis

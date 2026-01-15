@@ -9,6 +9,8 @@ pool:
 
 variables:
   CODEQL_VERSION: '2.16.4'
+  GITHUB_PAT: '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'   # reference secret variable
+
 
 resources:
   repositories:
@@ -88,25 +90,16 @@ steps:
     pathToPublish: codeql-results.sarif
     artifactName: CodeQL-Report
 
-# -------------------------
-# Publish CodeQL Results (Readable)
-# -------------------------
-- task: PowerShell@2
-  displayName: Filter SARIF results
-  inputs:
-    targetType: inline
-    script: |
-      $sarif = Get-Content codeql-results.sarif | ConvertFrom-Json
-      $issues = $sarif.runs.results | Where-Object {
-          $_.level -ne "none" -and -not ($_.locations[0].physicalLocation.artifactLocation.uri -like "codeql/*")
-      }
-      foreach ($i in $issues) {
-          Write-Host "File: $($i.locations[0].physicalLocation.artifactLocation.uri)"
-          Write-Host "Rule: $($i.descriptor.id)"
-          Write-Host "Message: $($i.message.text)"
-          Write-Host "Level: $($i.level)"
-          Write-Host "-----------------------"
-      }
+- script: |
+    SARIF=$(base64 -w 0 codeql-results.sarif)
 
-
-
+    curl -X POST \
+      -H "Authorization: Bearer $(GITHUB_PAT)" \
+      -H "Accept: application/vnd.github+json" \
+      https://api.github.com/repos/rkvarma4518/HearCheck/code-scanning/sarifs \
+      -d "{
+        \"commit_sha\": \"$(Build.SourceVersion)\",
+        \"ref\": \"refs/heads/$(Build.SourceBranchName)\",
+        \"sarif\": \"$SARIF\"
+      }"
+  displayName: 'Upload SARIF to GitHub Code Scanning'

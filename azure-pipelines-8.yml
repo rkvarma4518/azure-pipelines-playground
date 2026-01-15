@@ -114,3 +114,4 @@ steps:
       https://api.github.com/repos/rkvarma4518/HearCheck/code-scanning/sarifs \
       --data-binary @upload.json
   displayName: 'Upload SARIF to GitHub Code Scanning'
+

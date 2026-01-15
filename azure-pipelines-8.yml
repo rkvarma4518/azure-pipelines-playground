@@ -93,11 +93,12 @@ steps:
 - script: |
     set -e
 
-    echo "Encoding SARIF..."
+    echo "Base64 encoding SARIF..."
     base64 codeql-results.sarif > sarif.b64
 
+    echo "Creating upload payload..."
     jq -n \
-      --arg sarif "$(cat sarif.b64)" \
+      --rawfile sarif sarif.b64 \
       --arg sha "$(Build.SourceVersion)" \
       --arg ref "refs/heads/$(Build.SourceBranchName)" \
       '{
@@ -106,10 +107,10 @@ steps:
         sarif: $sarif
       }' > upload.json
 
-    curl -X POST \
+    echo "Uploading SARIF to GitHub..."
+    curl -sSf -X POST \
       -H "Authorization: Bearer $(GITHUB_PAT)" \
       -H "Accept: application/vnd.github+json" \
       https://api.github.com/repos/rkvarma4518/HearCheck/code-scanning/sarifs \
       --data-binary @upload.json
   displayName: 'Upload SARIF to GitHub Code Scanning'
-

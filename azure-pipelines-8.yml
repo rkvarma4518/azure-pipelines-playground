@@ -27,12 +27,6 @@ steps:
 # -------------------------
 # Install CodeQL
 # -------------------------
-- script: |
-    curl -i \
-      -H "Authorization: Bearer $(GITHUB_PAT)" \
-      -H "Accept: application/vnd.github+json" \
-      https://api.github.com/repos/rkvarma4518/linkpeek
-  displayName: 'Debug GitHub API access'
 
 - task: Bash@3
   displayName: Install CodeQL
@@ -97,28 +91,22 @@ steps:
     pathToPublish: codeql-results.sarif
     artifactName: CodeQL-Report
 
-- script: |
-    set -e
+- task: Bash@3
+  displayName: Upload SARIF to GitHub
+  inputs:
+    targetType: inline
+    script: |
+      SARIF_FILE="codeql-results.sarif"
+      REPO="rkvarma4518/linkpeek"   # e.g., n3wt0n/ScanGHfromAzDO
+      GITHUB_TOKEN=$(GITHUB_PAT)
 
-    echo "Base64 encoding SARIF..."
-    base64 codeql-results.sarif > sarif.b64
+      echo "Uploading SARIF file to GitHub Security Code Scanning..."
 
-    echo "Creating upload payload..."
-    jq -n \
-      --rawfile sarif sarif.b64 \
-      --arg sha "$(Build.SourceVersion)" \
-      --arg ref "refs/heads/$(Build.SourceBranchName)" \
-      '{
-        commit_sha: $sha,
-        ref: $ref,
-        sarif: $sarif
-      }' > upload.json
+      curl -s -X POST \
+        -H "Authorization: token $GITHUB_TOKEN" \
+        -H "Accept: application/vnd.github+json" \
+        -H "Content-Type: application/json" \
+        --data-binary @"$SARIF_FILE" \
+        "https://api.github.com/repos/$REPO/code-scanning/sarifs?ref=$(Build.SourceBranchName)"
 
-    echo "Uploading SARIF to GitHub..."
-    curl -sSf -X POST \
-      -H "Authorization: Bearer $(GITHUB_PAT)" \
-      -H "Accept: application/vnd.github+json" \
-      https://api.github.com/repos/rkvarma4518/linkpeek/code-scanning/sarifs \
-      --data-binary @upload.json
-  displayName: 'Upload SARIF to GitHub Code Scanning'
 

@@ -9,7 +9,8 @@ pool:
 
 variables:
   GITHUB_PAT: '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'   # reference secret variable
-
+  CODEQL_VERSION: '2.16.4'
+  
 steps:
 - task: NodeTool@0
   inputs:

@@ -16,7 +16,7 @@ resources:
   repositories:
   - repository: resourceRepo
     type: github
-    name: rkvarma4518/linkpeek
+    name: rkvarma1845/Hear-Check
     ref: main
     endpoint: 'github connection 1'
 
@@ -97,7 +97,7 @@ steps:
     targetType: inline
     script: |
       SARIF_FILE="codeql-results.sarif"
-      REPO="rkvarma4518/linkpeek"   # e.g., n3wt0n/ScanGHfromAzDO
+      REPO="rkvarma1845/Hear-Check"   # e.g., n3wt0n/ScanGHfromAzDO
       GITHUB_TOKEN=$(GITHUB_PAT)
 
       echo "Uploading SARIF file to GitHub Security Code Scanning..."

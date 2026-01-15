@@ -10,7 +10,7 @@ pool:
 variables:
   GITHUB_PAT: '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'   # reference secret variable
   CODEQL_VERSION: '2.16.4'
-  
+
 steps:
 - task: NodeTool@0
   inputs:
@@ -22,14 +22,19 @@ steps:
   displayName: 'npm install and test'
 
 - script: |
+    CODEQL_VERSION=2.16.4
+
     wget https://github.com/github/codeql-cli-binaries/releases/download/v${CODEQL_VERSION}/codeql-linux64.zip
     unzip codeql-linux64.zip
 
-    chmod +x ccodeql-linux64
+    export PATH=$PATH:$(pwd)/codeql
+    echo "##vso[task.setvariable variable=PATH]$PATH"
+
+    codeql version
   displayName: 'Get latest CodeQL package. Install on Agent.'
 
 - script: |
-    ./codeql-linux64 init \
+    ./codeql init \
     --repository rkvarma4518/HearCheck \
     --github-url https://github.com \
     --github-auth $(GITHUB_PAT) \
@@ -37,7 +42,7 @@ steps:
   displayName: 'Initialize CodeQL Executable and create a CodeQL database'
   
 - script: |
-    ./codeql-linux64 analyze \
+    ./codeql analyze \
     --repository rkvarma4518/HearCheckO \
     --github-url https://github.com \
     --github-auth $(GITHUB_PAT) \

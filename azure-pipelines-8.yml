@@ -111,7 +111,7 @@ steps:
     curl -sSf -X POST \
       -H "Authorization: Bearer $(GITHUB_PAT)" \
       -H "Accept: application/vnd.github+json" \
-      https://api.github.com/repos/rkvarma4518/HearCheck/code-scanning/sarifs \
+      https://api.github.com/repos/rkvarma4518/linkpeek/code-scanning/sarifs \
       --data-binary @upload.json
   displayName: 'Upload SARIF to GitHub Code Scanning'
 

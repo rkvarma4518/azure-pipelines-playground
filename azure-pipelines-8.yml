@@ -31,7 +31,7 @@ steps:
     curl -i \
       -H "Authorization: Bearer $(GITHUB_PAT)" \
       -H "Accept: application/vnd.github+json" \
-      https://api.github.com/repos/rkvarma4518/HearCheck
+      https://api.github.com/repos/rkvarma4518/linkpeek
   displayName: 'Debug GitHub API access'
 
 - task: Bash@3

@@ -91,15 +91,25 @@ steps:
     artifactName: CodeQL-Report
 
 - script: |
-    SARIF=$(base64 -w 0 codeql-results.sarif)
+    set -e
+
+    echo "Encoding SARIF..."
+    base64 codeql-results.sarif > sarif.b64
+
+    jq -n \
+      --arg sarif "$(cat sarif.b64)" \
+      --arg sha "$(Build.SourceVersion)" \
+      --arg ref "refs/heads/$(Build.SourceBranchName)" \
+      '{
+        commit_sha: $sha,
+        ref: $ref,
+        sarif: $sarif
+      }' > upload.json
 
     curl -X POST \
       -H "Authorization: Bearer $(GITHUB_PAT)" \
       -H "Accept: application/vnd.github+json" \
       https://api.github.com/repos/rkvarma4518/HearCheck/code-scanning/sarifs \
-      -d "{
-        \"commit_sha\": \"$(Build.SourceVersion)\",
-        \"ref\": \"refs/heads/$(Build.SourceBranchName)\",
-        \"sarif\": \"$SARIF\"
-      }"
+      --data-binary @upload.json
   displayName: 'Upload SARIF to GitHub Code Scanning'
+

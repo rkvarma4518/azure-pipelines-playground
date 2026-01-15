@@ -34,7 +34,7 @@ steps:
   displayName: 'Get latest CodeQL package. Install on Agent.'
 
 - script: |
-    ./codeql init \
+    codeql init \
     --repository rkvarma4518/HearCheck \
     --github-url https://github.com \
     --github-auth $(GITHUB_PAT) \
@@ -42,7 +42,7 @@ steps:
   displayName: 'Initialize CodeQL Executable and create a CodeQL database'
   
 - script: |
-    ./codeql analyze \
+    codeql analyze \
     --repository rkvarma4518/HearCheckO \
     --github-url https://github.com \
     --github-auth $(GITHUB_PAT) \

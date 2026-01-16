@@ -52,12 +52,13 @@ steps:
 
     ./codeql/codeql database analyze codeql-db \
       --download \
-      codeql/python-security-and-quality \
+      codeql/python-queries \
       --format=sarifv2 \
       --output=codeql-results.sarif
   displayName: Run CodeQL Analysis
   env:
     GITHUB_PAT: $(GITHUB_PAT)
+
 
 
 

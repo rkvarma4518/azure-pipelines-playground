@@ -55,7 +55,7 @@ steps:
     ./codeql/codeql database analyze codeql-db \
       --download \
       codeql/python-queries \
-      --format=sarifv2 \
+      --format=sarifv2.1 \
       --output=codeql-results.sarif
   displayName: Run CodeQL Analysis
   env:

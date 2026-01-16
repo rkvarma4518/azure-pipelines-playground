@@ -68,18 +68,30 @@ steps:
 #   env:
 #     GITHUB_PAT: $(GITHUB_PAT)
 
+# - bash: |
+#     export GITHUB_TOKEN=$(GITHUB_PAT)
+
+#     ./codeql/codeql github upload-results \
+#       --repository $(GITHUB_REPO) \
+#       --ref $(GITHUB_REF) \
+#       --commit $(Build.SourceVersion) \
+#       --sarif codeql-results.sarif
+#   displayName: Upload CodeQL Results to GitHub
+#   env:
+#     GITHUB_PAT: $(GITHUB_PAT)
+    
 - bash: |
     export GITHUB_TOKEN=$(GITHUB_PAT)
 
     ./codeql/codeql github upload-results \
-      --repository $(GITHUB_REPO) \
-      --ref $(GITHUB_REF) \
+      --repository rkvarma1845/Hear-Check \
+      --ref refs/heads/main \
       --commit $(Build.SourceVersion) \
-      --sarif codeql-results.sarif
+      --sarif codeql-results.sarif \
+      --category azdo-codeql
   displayName: Upload CodeQL Results to GitHub
   env:
     GITHUB_PAT: $(GITHUB_PAT)
-
 
 # 4️⃣ Publish SARIF
 - task: PublishBuildArtifacts@1

@@ -112,6 +112,7 @@ steps:
 
 - task: Bash@3
   displayName: Upload SARIF to GitHub Code Scanning
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
   inputs:
     targetType: inline
     script: |
@@ -119,23 +120,20 @@ steps:
 
       SARIF_FILE="codeql-results.sarif"
       REPO="rkvarma1845/Hear-Check"
-      REF="$(Build.SourceBranchName)"
       COMMIT_SHA="$(Build.SourceVersion)"
 
-      echo "Compressing SARIF..."
-      gzip -c $SARIF_FILE | base64 -w 0 > sarif.b64
-
-      echo "Uploading SARIF to GitHub..."
+      gzip -c "$SARIF_FILE" | base64 -w 0 > sarif.b64
 
       curl -X POST \
         -H "Authorization: Bearer $(GITHUB_PAT)" \
         -H "Accept: application/vnd.github+json" \
+        -H "User-Agent: Azure-DevOps-CodeQL-SARIF" \
         https://api.github.com/repos/$REPO/code-scanning/sarifs \
         -d @- <<EOF
       {
         "commit_sha": "$COMMIT_SHA",
-        "ref": "refs/heads/$REF",
+        "ref": "refs/heads/main",
         "sarif": "$(cat sarif.b64)",
-        "tool_name": "CodeQL (Azure DevOps)"
+        "tool_name": "CodeQL-Azure-DevOps"
       }
       EOF

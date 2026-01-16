@@ -68,26 +68,17 @@ steps:
 #   env:
 #     GITHUB_PAT: $(GITHUB_PAT)
 
-# - bash: |
-#     export GITHUB_TOKEN=$(GITHUB_PAT)
+- bash: |
+    export GITHUB_TOKEN=$(GITHUB_PAT)
 
-#     ./codeql/codeql github upload-results \
-#       --repository $(GITHUB_REPO) \
-#       --ref $(GITHUB_REF) \
-#       --commit $(Build.SourceVersion) \
-#       --sarif codeql-results.sarif
-#   displayName: Upload CodeQL Results to GitHub
-#   env:
-#     GITHUB_PAT: $(GITHUB_PAT)
-
-- script: |
-    ./codeql/codeql analyze \
-    --repository $(GITHUB_REPO) \
-    --github-url https://github.com \
-    --github-auth $(GITHUB_PAT) \
-    --commit $(Build.SourceVersion) \
-    --ref $(Build.SourceBranch)
-  displayName: 'Populate the CodeQL runner databases, analyze them, and upload the results to GitHub.'
+    ./codeql/codeql github upload-results \
+      --repository $(GITHUB_REPO) \
+      --ref $(GITHUB_REF) \
+      --commit $(Build.SourceVersion) \
+      --sarif codeql-results.sarif
+  displayName: Upload CodeQL Results to GitHub
+  env:
+    GITHUB_PAT: $(GITHUB_PAT)
 
 
 # 4️⃣ Publish SARIF

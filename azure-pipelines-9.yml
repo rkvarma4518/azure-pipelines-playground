@@ -26,7 +26,8 @@ steps:
 
 # 1️⃣ Download CodeQL
 - bash: |
-    wget https://github.com/github/codeql-cli-binaries/releases/download/v$(CODEQL_VERSION)/codeql-linux64.zip
+    # wget https://github.com/github/codeql-cli-binaries/releases/download/v$(CODEQL_VERSION)/codeql-linux64.zip
+    wget https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip
     unzip codeql-linux64.zip
     chmod +x codeql/codeql
   displayName: Download CodeQL CLI

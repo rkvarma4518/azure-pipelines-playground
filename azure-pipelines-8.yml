@@ -91,22 +91,51 @@ steps:
     pathToPublish: codeql-results.sarif
     artifactName: CodeQL-Report
 
+# - task: Bash@3
+#   displayName: Upload SARIF to GitHub
+#   inputs:
+#     targetType: inline
+#     script: |
+#       SARIF_FILE="codeql-results.sarif"
+#       REPO="rkvarma1845/Hear-Check"   # e.g., n3wt0n/ScanGHfromAzDO
+#       GITHUB_TOKEN=$(GITHUB_PAT)
+
+#       echo "Uploading SARIF file to GitHub Security Code Scanning..."
+
+#       curl -s -X POST \
+#         -H "Authorization: token $GITHUB_TOKEN" \
+#         -H "Accept: application/vnd.github+json" \
+#         -H "Content-Type: application/json" \
+#         --data-binary @"$SARIF_FILE" \
+#         "https://api.github.com/repos/$REPO/code-scanning/sarifs?ref=$(Build.SourceBranchName)"
+
+
 - task: Bash@3
-  displayName: Upload SARIF to GitHub
+  displayName: Upload SARIF to GitHub Code Scanning
   inputs:
     targetType: inline
     script: |
+      set -e
+
       SARIF_FILE="codeql-results.sarif"
-      REPO="rkvarma1845/Hear-Check"   # e.g., n3wt0n/ScanGHfromAzDO
-      GITHUB_TOKEN=$(GITHUB_PAT)
+      REPO="rkvarma1845/Hear-Check"
+      REF="$(Build.SourceBranchName)"
+      COMMIT_SHA="$(Build.SourceVersion)"
 
-      echo "Uploading SARIF file to GitHub Security Code Scanning..."
+      echo "Compressing SARIF..."
+      gzip -c $SARIF_FILE | base64 -w 0 > sarif.b64
 
-      curl -s -X POST \
-        -H "Authorization: token $GITHUB_TOKEN" \
+      echo "Uploading SARIF to GitHub..."
+
+      curl -X POST \
+        -H "Authorization: Bearer $(GITHUB_PAT)" \
         -H "Accept: application/vnd.github+json" \
-        -H "Content-Type: application/json" \
-        --data-binary @"$SARIF_FILE" \
-        "https://api.github.com/repos/$REPO/code-scanning/sarifs?ref=$(Build.SourceBranchName)"
-
-
+        https://api.github.com/repos/$REPO/code-scanning/sarifs \
+        -d @- <<EOF
+      {
+        "commit_sha": "$COMMIT_SHA",
+        "ref": "refs/heads/$REF",
+        "sarif": "$(cat sarif.b64)",
+        "tool_name": "CodeQL (Azure DevOps)"
+      }
+      EOF

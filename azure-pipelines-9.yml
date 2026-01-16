@@ -31,6 +31,14 @@ steps:
     chmod +x codeql/codeql
   displayName: Download CodeQL CLI
 
+# -------------------------
+# Install CodeQL Python Query Pack
+# -------------------------
+- bash: |
+    ./codeql/codeql pack install codeql/python-all
+  displayName: Install CodeQL Python Query Pack
+
+
 # 2️⃣ Create CodeQL Database
 - bash: |
     ./codeql/codeql database create codeql-db \
@@ -38,13 +46,21 @@ steps:
       --source-root .
   displayName: Create CodeQL Database
 
-# 3️⃣ Analyze
+# # 3️⃣ Analyze
+# - bash: |
+#     ./codeql/codeql database analyze codeql-db \
+#       codeql/python-queries \
+#       --format=sarifv2 \
+#       --output=codeql-results.sarif
+#   displayName: Run CodeQL Analysis
+
 - bash: |
     ./codeql/codeql database analyze codeql-db \
-      codeql/python-queries \
+      codeql/python-all \
       --format=sarifv2 \
       --output=codeql-results.sarif
   displayName: Run CodeQL Analysis
+
 
 # -------------------------
 # Upload SARIF to GitHub

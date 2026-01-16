@@ -50,10 +50,10 @@ steps:
 - bash: |
     ./codeql/codeql database analyze codeql-db \
       --download \
-      codeql/python-all \
+      codeql/python-security-and-quality \
       --format=sarifv2 \
       --output=codeql-results.sarif
-  displayName: Run CodeQL Analysis
+
 
 
 

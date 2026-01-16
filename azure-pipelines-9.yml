@@ -48,11 +48,17 @@ steps:
 #   displayName: Run CodeQL Analysis
 
 - bash: |
+    export GITHUB_TOKEN=$(GITHUB_PAT)
+
     ./codeql/codeql database analyze codeql-db \
       --download \
       codeql/python-security-and-quality \
       --format=sarifv2 \
       --output=codeql-results.sarif
+  displayName: Run CodeQL Analysis
+  env:
+    GITHUB_PAT: $(GITHUB_PAT)
+
 
 
 

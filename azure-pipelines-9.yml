@@ -42,13 +42,6 @@ steps:
   displayName: Create CodeQL Database
 
 # # 3️⃣ Analyze
-# - bash: |
-#     ./codeql/codeql database analyze codeql-db \
-#       codeql/python-queries \
-#       --format=sarifv2 \
-#       --output=codeql-results.sarif
-#   displayName: Run CodeQL Analysis
-
 - bash: |
     export GITHUB_TOKEN=$(GITHUB_PAT)
 
@@ -61,24 +54,32 @@ steps:
   env:
     GITHUB_PAT: $(GITHUB_PAT)
 
-
-
-
-
-
 # -------------------------
 # Upload SARIF to GitHub
 # -------------------------
+# - bash: |
+#     ./codeql/codeql github upload-results \
+#       --repository $(GITHUB_REPO) \
+#       --ref $(GITHUB_REF) \
+#       --commit $(Build.SourceVersion) \
+#       --sarif codeql-results.sarif \
+#       --github-auth $GITHUB_PAT
+#   displayName: Upload CodeQL Results to GitHub
+#   env:
+#     GITHUB_PAT: $(GITHUB_PAT)
+
 - bash: |
+    export GITHUB_TOKEN=$(GITHUB_PAT)
+
     ./codeql/codeql github upload-results \
       --repository $(GITHUB_REPO) \
-      --ref $(GITHUB_REF) \
+      ---ref $(GITHUB_REF) \
       --commit $(Build.SourceVersion) \
-      --sarif codeql-results.sarif \
-      --github-auth $GITHUB_PAT
+      --sarif codeql-results.sarif
   displayName: Upload CodeQL Results to GitHub
   env:
     GITHUB_PAT: $(GITHUB_PAT)
+
 
 # 4️⃣ Publish SARIF
 - task: PublishBuildArtifacts@1

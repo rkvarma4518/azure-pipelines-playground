@@ -31,13 +31,6 @@ steps:
     chmod +x codeql/codeql
   displayName: Download CodeQL CLI
 
-# -------------------------
-# Install CodeQL Python Query Pack
-# -------------------------
-- bash: |
-    ./codeql/codeql pack install codeql/python-all
-  displayName: Install CodeQL Python Query Pack
-
 
 # 2️⃣ Create CodeQL Database
 - bash: |
@@ -56,10 +49,12 @@ steps:
 
 - bash: |
     ./codeql/codeql database analyze codeql-db \
+      --download \
       codeql/python-all \
       --format=sarifv2 \
       --output=codeql-results.sarif
   displayName: Run CodeQL Analysis
+
 
 
 # -------------------------

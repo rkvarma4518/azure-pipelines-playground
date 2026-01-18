@@ -88,7 +88,6 @@ steps:
       --ref refs/heads/main \
       --commit $(Build.SourceVersion) \
       --sarif codeql-results.sarif
-      # --category azdo-codeql
   displayName: Upload CodeQL Results to GitHub
   env:
     GITHUB_PAT: $(GITHUB_PAT)

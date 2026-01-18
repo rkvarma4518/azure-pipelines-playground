@@ -87,8 +87,8 @@ steps:
       --repository rkvarma1845/Hear-Check \
       --ref refs/heads/main \
       --commit $(Build.SourceVersion) \
-      --sarif codeql-results.sarif \
-      --category azdo-codeql
+      --sarif codeql-results.sarif
+      # --category azdo-codeql
   displayName: Upload CodeQL Results to GitHub
   env:
     GITHUB_PAT: $(GITHUB_PAT)

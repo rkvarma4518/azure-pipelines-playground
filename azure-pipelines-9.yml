@@ -41,10 +41,15 @@ steps:
 #   displayName: Create CodeQL Database
 
 # Create CodeQL Database (auto-detect languages)
+# # 3️⃣ Analyze
 - bash: |
+    export GITHUB_TOKEN=$(GITHUB_PAT)
     ./codeql/codeql database create codeql-db \
       --source-root .
-  displayName: Create CodeQL Database
+  displayName: Run CodeQL Analysis
+  env:
+    GITHUB_PAT: $(GITHUB_PAT)
+
 
 
 # # 3️⃣ Analyze
@@ -56,8 +61,8 @@ steps:
 #       --format=sarifv2.1.0 \
 #       --output=codeql-results.sarif
 #   displayName: Run CodeQL Analysis
-  # env:
-  #   GITHUB_PAT: $(GITHUB_PAT)
+#   env:
+#     GITHUB_PAT: $(GITHUB_PAT)
 
 - bash: |
     ./codeql/codeql database analyze codeql-db \

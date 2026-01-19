@@ -18,8 +18,7 @@ pool:
 variables:
   GITHUB_PAT: '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'   # reference secret variable
   CODEQL_VERSION: '2.16.1'
-  GITHUB_REPO: 'rkvarma1845/Hear-Check'   # <-- change this
-  GITHUB_REF: 'refs/heads/main'
+  GITHUB_REPO: 'rkvarma1845/Hear-Check'
 
 steps:
 - checkout: resourceRepo
@@ -43,54 +42,30 @@ steps:
 
 # # 3️⃣ Analyze
 - bash: |
-    export GITHUB_TOKEN=$(GITHUB_PAT)
-
+    # export GITHUB_TOKEN=$(GITHUB_PAT)
     ./codeql/codeql database analyze codeql-db \
       --download \
       codeql/python-queries \
       --format=sarifv2.1.0 \
       --output=codeql-results.sarif
   displayName: Run CodeQL Analysis
-  env:
-    GITHUB_PAT: $(GITHUB_PAT)
+  # env:
+  #   GITHUB_PAT: $(GITHUB_PAT)
 
 # -------------------------
 # Upload SARIF to GitHub
 # -------------------------
 # - bash: |
-#     ./codeql/codeql github upload-results \
-#       --repository $(GITHUB_REPO) \
-#       --ref $(GITHUB_REF) \
-#       --commit $(Build.SourceVersion) \
-#       --sarif codeql-results.sarif \
-#       --github-auth $GITHUB_PAT
-#   displayName: Upload CodeQL Results to GitHub
-#   env:
-#     GITHUB_PAT: $(GITHUB_PAT)
-
-# - bash: |
 #     export GITHUB_TOKEN=$(GITHUB_PAT)
 
 #     ./codeql/codeql github upload-results \
-#       --repository $(GITHUB_REPO) \
-#       --ref $(GITHUB_REF) \
+#       --repository rkvarma1845/Hear-Check \
+#       --ref refs/heads/main \
 #       --commit $(Build.SourceVersion) \
 #       --sarif codeql-results.sarif
 #   displayName: Upload CodeQL Results to GitHub
 #   env:
 #     GITHUB_PAT: $(GITHUB_PAT)
-    
-- bash: |
-    export GITHUB_TOKEN=$(GITHUB_PAT)
-
-    ./codeql/codeql github upload-results \
-      --repository rkvarma1845/Hear-Check \
-      --ref refs/heads/main \
-      --commit $(Build.SourceVersion) \
-      --sarif codeql-results.sarif
-  displayName: Upload CodeQL Results to GitHub
-  env:
-    GITHUB_PAT: $(GITHUB_PAT)
 
 # 4️⃣ Publish SARIF
 - task: PublishBuildArtifacts@1

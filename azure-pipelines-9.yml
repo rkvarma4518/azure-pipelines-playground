@@ -15,17 +15,12 @@ resources:
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-  GITHUB_PAT: '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'   # reference secret variable
-  CODEQL_VERSION: '2.16.1'
-  GITHUB_REPO: 'rkvarma1845/Hear-Check'
-
 steps:
 - checkout: resourceRepo
 
-# 1️⃣ Download CodeQL
+# Download CodeQL
 - bash: |
-    # wget https://github.com/github/codeql-cli-binaries/releases/download/v$(CODEQL_VERSION)/codeql-linux64.zip
+    # wget https://github.com/github/codeql-cli-binaries/releases/download/v2.16.1/codeql-linux64.zip
     wget https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip
     unzip codeql-linux64.zip
     chmod +x codeql/codeql
@@ -33,63 +28,23 @@ steps:
   displayName: Download CodeQL CLI
 
 
-# 2️⃣ Create CodeQL Database
-# - bash: |
-#     ./codeql/codeql database create codeql-db \
-#       --language=python \
-#       --source-root .
-#   displayName: Create CodeQL Database
-
-# Create CodeQL Database (auto-detect languages)
-# # 3️⃣ Analyze
+# Create CodeQL Database
 - bash: |
-    export GITHUB_TOKEN=$(GITHUB_PAT)
     ./codeql/codeql database create codeql-db \
+      --language=python \
       --source-root .
-  displayName: Run CodeQL Analysis
-  env:
-    GITHUB_PAT: $(GITHUB_PAT)
+  displayName: Create CodeQL Database
 
-
-
-# # 3️⃣ Analyze
-# - bash: |
-#     # export GITHUB_TOKEN=$(GITHUB_PAT)
-#     ./codeql/codeql database analyze codeql-db \
-#       --download \
-#       codeql/python-queries \
-#       --format=sarifv2.1.0 \
-#       --output=codeql-results.sarif
-#   displayName: Run CodeQL Analysis
-#   env:
-#     GITHUB_PAT: $(GITHUB_PAT)
-
+# Analyze
 - bash: |
     ./codeql/codeql database analyze codeql-db \
       --download \
       codeql/python-queries \
-      codeql/javascript-queries \
       --format=sarifv2.1.0 \
       --output=codeql-results.sarif
   displayName: Run CodeQL Analysis
 
-
-# -------------------------
-# Upload SARIF to GitHub
-# -------------------------
-# - bash: |
-#     export GITHUB_TOKEN=$(GITHUB_PAT)
-
-#     ./codeql/codeql github upload-results \
-#       --repository rkvarma1845/Hear-Check \
-#       --ref refs/heads/main \
-#       --commit $(Build.SourceVersion) \
-#       --sarif codeql-results.sarif
-#   displayName: Upload CodeQL Results to GitHub
-#   env:
-#     GITHUB_PAT: $(GITHUB_PAT)
-
-# 4️⃣ Publish SARIF
+# Publish SARIF
 - task: PublishBuildArtifacts@1
   inputs:
     pathToPublish: codeql-results.sarif

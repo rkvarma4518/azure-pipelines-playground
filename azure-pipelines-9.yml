@@ -34,23 +34,40 @@ steps:
 
 
 # 2️⃣ Create CodeQL Database
+# - bash: |
+#     ./codeql/codeql database create codeql-db \
+#       --language=python \
+#       --source-root .
+#   displayName: Create CodeQL Database
+
+# Create CodeQL Database (auto-detect languages)
 - bash: |
     ./codeql/codeql database create codeql-db \
-      --language=python \
       --source-root .
   displayName: Create CodeQL Database
 
+
 # # 3️⃣ Analyze
+# - bash: |
+#     # export GITHUB_TOKEN=$(GITHUB_PAT)
+#     ./codeql/codeql database analyze codeql-db \
+#       --download \
+#       codeql/python-queries \
+#       --format=sarifv2.1.0 \
+#       --output=codeql-results.sarif
+#   displayName: Run CodeQL Analysis
+  # env:
+  #   GITHUB_PAT: $(GITHUB_PAT)
+
 - bash: |
-    # export GITHUB_TOKEN=$(GITHUB_PAT)
     ./codeql/codeql database analyze codeql-db \
       --download \
       codeql/python-queries \
+      codeql/javascript-queries \
       --format=sarifv2.1.0 \
       --output=codeql-results.sarif
   displayName: Run CodeQL Analysis
-  # env:
-  #   GITHUB_PAT: $(GITHUB_PAT)
+
 
 # -------------------------
 # Upload SARIF to GitHub

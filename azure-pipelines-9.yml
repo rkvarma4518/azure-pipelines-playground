@@ -20,7 +20,6 @@ steps:
 
 # Download CodeQL
 - bash: |
-    # wget https://github.com/github/codeql-cli-binaries/releases/download/v2.16.1/codeql-linux64.zip
     wget https://github.com/github/codeql-cli-binaries/releases/latest/download/codeql-linux64.zip
     unzip codeql-linux64.zip
     chmod +x codeql/codeql

@@ -21,15 +21,17 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+# 1️⃣ Checkout GitHub repo to a known path
 - checkout: resourceRepo
   clean: true
+  path: github-src
 
-# 1️⃣ Mirror push to Azure Repo
+# 2️⃣ Mirror push to Azure Repo
 - script: |
     git config --global user.name "AzurePipeline"
     git config --global user.email "pipeline@azure.com"
 
-    cd $(GITHUB_REPO_PATH)
+    cd $(Build.SourcesDirectory)/github-src
     git remote add azure $(AZURE_REPO_URL) || echo "Remote exists"
     git push azure HEAD:refs/heads/main --force
   displayName: Mirror GitHub to Azure Repo

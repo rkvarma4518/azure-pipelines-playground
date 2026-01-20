@@ -19,5 +19,10 @@ steps:
 - checkout: resourceRepo
   clean: true
 
+# 2️⃣ Initialize CodeQL (SETS languages internally)
+- task: AdvancedSecurity-Codeql-Init@1
+  displayName: Initialize CodeQL
+
+# 3️⃣ Run CodeQL analysis (AUTO publishes to Security tab)
 - task: AdvancedSecurity-Codeql-Analyze@1
   displayName: Run CodeQL Analysis

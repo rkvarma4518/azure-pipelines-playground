@@ -50,7 +50,7 @@ steps:
 
       git checkout main
 
-      git remote add mirror https://dev.azure.com/rkvarma4518/dep-docker-image/_git/dep-docker-image
+      git remote add mirror https://rkvarma4518@dev.azure.com/rkvarma4518/MyProject/_git/dep-docker-image
 
       git config --global http.https://dev.azure.com/.extraheader "AUTHORIZATION: bearer $SYSTEM_ACCESSTOKEN"
       git push mirror main -f

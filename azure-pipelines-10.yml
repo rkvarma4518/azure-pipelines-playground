@@ -41,6 +41,7 @@ steps:
   displayName: "Clone GitHub repo and push branch"
   env:
     GITHUB_TOKEN: $(github_pat)
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
   inputs:
     targetType: 'inline'
     script: |
@@ -51,8 +52,9 @@ steps:
 
       git remote add mirror https://dev.azure.com/rkvarma4518/dep-docker-image/_git/dep-docker-image
 
-      git config --global http.extraheader "AUTHORIZATION: bearer (System.AccessToken)"
+      git config --global http.https://dev.azure.com/.extraheader "AUTHORIZATION: bearer $SYSTEM_ACCESSTOKEN"
       git push mirror main -f
+
 
 
 

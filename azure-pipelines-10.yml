@@ -12,6 +12,9 @@ resources:
     ref: main
     endpoint: 'github connection 1'
 
+variables:
+  advancedsecurity.codeql.language: python
+
 pool:
   vmImage: ubuntu-latest
 

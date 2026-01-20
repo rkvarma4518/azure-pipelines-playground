@@ -16,6 +16,7 @@ variables:
   advancedsecurity.codeql.language: python
   AZURE_REPO_URL: https://rkvarma4518@dev.azure.com/rkvarma4518/dep-docker-image/_git/dep-docker-image
   GITHUB_REPO_PATH: $(Build.SourcesDirectory)/resourceRepo
+  github_pat: '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'
 
 pool:
   vmImage: ubuntu-latest
@@ -36,14 +37,22 @@ steps:
 #     git push azure HEAD:refs/heads/main --force
 #   displayName: Mirror GitHub to Azure Repo
 
-- task: Mirror-Repositories@1
+- task: Bash@3
+  displayName: "Clone GitHub repo and push branch"
+  env:
+    GITHUB_TOKEN: $(github_pat)
   inputs:
-    sourceType: true
-    sourceURL: 'https://github.com/nevincansel/mirror-repositories-test.git'
-    sourcePAT: '$(github_pat)'
-    destinationType: true
-    destinationURL: 'https://dev.azure.com/nevincansel5517/MyWorks/_git/mirror-test'
-    destinationPAT: '$(azure_pat)'
+    targetType: 'inline'
+    script: |
+      git clone https://$(GITHUB_TOKEN)@github.com/rkvarma1845/Hear-Check.git
+      cd REPO_NAME
+
+      git checkout newBranch
+
+      git remote add mirror $(AZURE_REPO_URL)
+      git push mirror newBranch -f
+
+
 
 
 

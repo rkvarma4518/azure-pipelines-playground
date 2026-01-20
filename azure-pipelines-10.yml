@@ -44,8 +44,8 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      git clone https://$(GITHUB_TOKEN)@github.com/rkvarma1845/Hear-Check.git
-      cd REPO_NAME
+      git clone https://${GITHUB_TOKEN}@github.com/rkvarma1845/Hear-Check.git
+      cd Hear-Check
 
       git checkout newBranch
 

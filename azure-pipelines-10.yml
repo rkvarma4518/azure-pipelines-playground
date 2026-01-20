@@ -12,9 +12,12 @@ resources:
     ref: main
     endpoint: 'github connection 1'
 
+  - repository: targetRepo
+    type: git
+    name: dep-docker-image/dep-docker-image
+
 variables:
   advancedsecurity.codeql.language: python
-  AZURE_REPO_URL: https://rkvarma4518@dev.azure.com/rkvarma4518/dep-docker-image/_git/dep-docker-image
   GITHUB_REPO_PATH: $(Build.SourcesDirectory)/resourceRepo
   github_pat: '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'
 
@@ -28,15 +31,6 @@ steps:
   path: github-src
 
 # 2️⃣ Mirror push to Azure Repo
-# - script: |
-#     git config --global user.name "AzurePipeline"
-#     git config --global user.email "pipeline@azure.com"
-
-#     cd $(Build.SourcesDirectory)/github-src
-#     git remote add azure $(AZURE_REPO_URL) || echo "Remote exists"
-#     git push azure HEAD:refs/heads/main --force
-#   displayName: Mirror GitHub to Azure Repo
-
 - task: Bash@3
   displayName: "Clone GitHub repo and push branch"
   env:
@@ -58,13 +52,8 @@ steps:
 
 
 
-
-
-
-# 3️⃣ Checkout mirrored Azure Repo for analysis
-- checkout: self
-  clean: true
-  displayName: Checkout Azure Repo
+# 3️⃣ Checkout Azure Repo for analysis
+- checkout: targetRepo
 
 # 4️⃣ Initialize CodeQL
 - task: AdvancedSecurity-Codeql-Init@1

@@ -49,8 +49,9 @@ steps:
 
       git checkout main
 
-      git remote add mirror $(AZURE_REPO_URL)
+      git remote add mirror https://$(System.AccessToken)@dev.azure.com/rkvarma4518/dep-docker-image/_git/dep-docker-image
       git push mirror main -f
+
 
 
 

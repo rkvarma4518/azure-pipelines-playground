@@ -27,14 +27,25 @@ steps:
   path: github-src
 
 # 2️⃣ Mirror push to Azure Repo
-- script: |
-    git config --global user.name "AzurePipeline"
-    git config --global user.email "pipeline@azure.com"
+# - script: |
+#     git config --global user.name "AzurePipeline"
+#     git config --global user.email "pipeline@azure.com"
 
-    cd $(Build.SourcesDirectory)/github-src
-    git remote add azure $(AZURE_REPO_URL) || echo "Remote exists"
-    git push azure HEAD:refs/heads/main --force
-  displayName: Mirror GitHub to Azure Repo
+#     cd $(Build.SourcesDirectory)/github-src
+#     git remote add azure $(AZURE_REPO_URL) || echo "Remote exists"
+#     git push azure HEAD:refs/heads/main --force
+#   displayName: Mirror GitHub to Azure Repo
+
+- task: Mirror-Repositories@1
+  inputs:
+    sourceType: true
+    sourceURL: 'https://github.com/nevincansel/mirror-repositories-test.git'
+    sourcePAT: '$(github_pat)'
+    destinationType: true
+    destinationURL: 'https://dev.azure.com/nevincansel5517/MyWorks/_git/mirror-test'
+    destinationPAT: '$(azure_pat)'
+
+
 
 # 3️⃣ Checkout mirrored Azure Repo for analysis
 - checkout: self

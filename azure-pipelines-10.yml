@@ -47,7 +47,7 @@ steps:
       git clone https://${GITHUB_TOKEN}@github.com/rkvarma1845/Hear-Check.git
       cd Hear-Check
 
-      git checkout -b main
+      git checkout main
 
       git remote add mirror $(AZURE_REPO_URL)
       git push mirror main -f

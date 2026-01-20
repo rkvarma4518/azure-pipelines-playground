@@ -1,0 +1,23 @@
+trigger:
+- none
+
+pr:
+- none
+
+resources:
+  repositories:
+  - repository: resourceRepo
+    type: github
+    name: rkvarma1845/Hear-Check
+    ref: main
+    endpoint: 'github connection 1'
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- checkout: resourceRepo
+  clean: true
+
+- task: AdvancedSecurity-Codeql-Analyze@1
+  displayName: Run CodeQL Analysis

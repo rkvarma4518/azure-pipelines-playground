@@ -12,13 +12,8 @@ resources:
     ref: main
     endpoint: 'github connection 1'
 
-  - repository: targetRepo
-    type: git
-    name: dep-docker-image/dep-docker-image
-
 variables:
   advancedsecurity.codeql.language: python
-  GITHUB_REPO_PATH: $(Build.SourcesDirectory)/resourceRepo
   github_pat: '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'
 
 pool:
@@ -48,17 +43,3 @@ steps:
 
       git config --global http.https://dev.azure.com/.extraheader "AUTHORIZATION: bearer PXStDt20Sl1qigV8OgwM5OS0nNTCBzdJZZIQl6x7g1qsZGGXbDWXJQQJ99CAACAAAAAAAAAAAAASAZDO2OmX"
       git push mirror main -f
-
-
-
-
-# 3️⃣ Checkout Azure Repo for analysis
-- checkout: targetRepo
-
-# 4️⃣ Initialize CodeQL
-- task: AdvancedSecurity-Codeql-Init@1
-  displayName: Initialize CodeQL
-
-# 5️⃣ Run CodeQL analysis and publish results to Security tab
-- task: AdvancedSecurity-Codeql-Analyze@1
-  displayName: Run CodeQL Analysis

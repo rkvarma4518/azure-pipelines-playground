@@ -47,10 +47,10 @@ steps:
       git clone https://${GITHUB_TOKEN}@github.com/rkvarma1845/Hear-Check.git
       cd Hear-Check
 
-      git checkout newBranch
+      git checkout -b main
 
       git remote add mirror $(AZURE_REPO_URL)
-      git push mirror newBranch -f
+      git push mirror main -f
 
 
 

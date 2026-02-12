@@ -1,0 +1,118 @@
+trigger: none
+
+pool:
+  vmImage: ubuntu-latest
+
+# ----------------------------------------
+# Variables
+# ----------------------------------------
+variables:
+  # Azure / ACR
+  AZURE_SUBSCRIPTION: az-resource-manager
+  ACR_SERVICE_CONNECTION: azure-registry-dev
+  ACR_NAME: perdevtest
+  RESOURCE_GROUP: azure-devops
+
+  # Trivy
+  TRIVY_IMAGE: aquasec/trivy:0.49.1
+  TRIVY_CACHE_DIR: /opt/trivy-cache
+
+  # Reports
+  REPORT_DIR: $(Build.SourcesDirectory)/trivy-report
+
+# ----------------------------------------
+# Login to ACR (Service Connection)
+# ----------------------------------------
+steps:
+- task: Docker@2
+  displayName: Login to ACR (Service Connection)
+  inputs:
+    command: login
+    containerRegistry: $(ACR_SERVICE_CONNECTION)
+
+# ----------------------------------------
+# Prepare directories
+# ----------------------------------------
+- script: |
+    sudo mkdir -p $(TRIVY_CACHE_DIR)
+    mkdir -p $(REPORT_DIR)
+  displayName: Prepare directories
+
+# ----------------------------------------
+# Download Trivy DB (cached)
+# ----------------------------------------
+- script: |
+    if [ ! -d "$(TRIVY_CACHE_DIR)/db" ]; then
+      docker run --rm \
+        -v $(TRIVY_CACHE_DIR):/root/.cache/ \
+        $(TRIVY_IMAGE) \
+        image --download-db-only
+    else
+      echo "Trivy DB already exists"
+    fi
+  displayName: Download Trivy DB
+
+# ----------------------------------------
+# Scan latest image of each ACR repo
+# ----------------------------------------
+- task: AzureCLI@2
+  displayName: Scan latest image of each ACR repo
+  inputs:
+    azureSubscription: $(AZURE_SUBSCRIPTION)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      set -e
+
+      ACR_LOGIN_SERVER=$(az acr show -n $(ACR_NAME) --query loginServer -o tsv)
+      echo "ACR Login Server: $ACR_LOGIN_SERVER"
+
+      REPOS=$(az acr repository list -n $(ACR_NAME) -o tsv)
+
+      for repo in $REPOS; do
+        echo "--------------------------------------"
+        echo "Repository: $repo"
+
+        TAG=$(az acr repository show-tags \
+          -n $(ACR_NAME) \
+          --repository $repo \
+          --orderby time_desc \
+          --top 1 \
+          -o tsv)
+
+        if [ -z "$TAG" ]; then
+          echo "No tags found for $repo, skipping"
+          continue
+        fi
+
+        IMAGE="$ACR_LOGIN_SERVER/$repo:$TAG"
+        SAFE_REPO_NAME=$(echo "$repo" | tr '/' '_')
+
+        echo "Pulling image: $IMAGE"
+        docker pull $IMAGE
+
+        echo "Scanning image: $IMAGE"
+        docker run --rm \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v $(TRIVY_CACHE_DIR):/root/.cache/ \
+          -v $(REPORT_DIR):/report \
+          $(TRIVY_IMAGE) image \
+          --offline-scan \
+          --skip-db-update \
+          --scanners vuln,secret \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --ignore-unfixed \
+          --format template \
+          --template "@/contrib/html.tpl" \
+          -o /report/trivy-${SAFE_REPO_NAME}.html \
+          $IMAGE
+      done
+
+# ----------------------------------------
+# Publish Trivy HTML Reports
+# ----------------------------------------
+- task: PublishBuildArtifacts@1
+  displayName: Publish Trivy Reports
+  inputs:
+    pathToPublish: '$(REPORT_DIR)'
+    artifactName: 'Trivy-ACR-Scan-Reports'

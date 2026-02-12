@@ -1,0 +1,57 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger: none
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  # IMAGE_NAME: acrname.azurecr.io/pdfhub:latest
+  IMAGE_NAME: rkvarma4518/pdfhub:latest
+  TRIVY_CACHE_DIR: /opt/trivy-cache
+
+steps:
+
+# Login to ACR
+# - task: AzureCLI@2
+#   inputs:
+#     azureSubscription: 'ACR-Service-Connection'
+#     scriptType: bash
+#     scriptLocation: inlineScript
+#     inlineScript: |
+#       az acr login --name acrname
+
+# Pull image
+- script: |
+    docker pull $(IMAGE_NAME)
+  displayName: Pull image from ACR
+
+# Download Trivy DB (ONLY if not present)
+- script: |
+    if [ ! -d "$(TRIVY_CACHE_DIR)/db" ]; then
+      echo "Trivy DB not found. Downloading..."
+      docker run --rm \
+        -v $(TRIVY_CACHE_DIR):/root/.cache/ \
+        aquasec/trivy:0.49.1 \
+        image --download-db-only
+    else
+      echo "Trivy DB already exists. Skipping download."
+    fi
+  displayName: Download Trivy DB (One-time)
+
+# OFFLINE vulnerability scan
+- script: |
+    docker run --rm \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v $(TRIVY_CACHE_DIR):/root/.cache/ \
+      aquasec/trivy:0.49.1 image \
+      --skip-db-update \
+      --offline-scan \
+      --severity CRITICAL,HIGH \
+      --ignore-unfixed \
+      --exit-code 1 \
+      $(IMAGE_NAME)
+  displayName: Trivy Offline Scan

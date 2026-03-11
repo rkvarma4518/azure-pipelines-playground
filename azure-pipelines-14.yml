@@ -1,0 +1,13 @@
+trigger: none
+pr: none
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- bash: echo "v2.5.0" > $(Build.ArtifactStagingDirectory)/imageTag.txt
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: $(Build.ArtifactStagingDirectory)/imageTag.txt
+    artifact: build2ImageTag

@@ -25,11 +25,22 @@ pool:
 
 steps:
 - bash: |
-    GROUP_ID=$(curl -s -u ":$(System.AccessToken)" \
-      "$(System.TeamFoundationCollectionUri)$(System.TeamProject)/_apis/distributedtask/variablegroups?groupName=pipeline-vars&api-version=7.0" \
-      | jq -r '.value[0].id')
+    echo "=== System Variables ==="
+    echo "Collection URI: $(System.TeamFoundationCollectionUri)"
+    echo "Project: $(System.TeamProject)"
+    echo "Access Token exists: $(if [ -n '$(System.AccessToken)' ]; then echo YES; else echo NO; fi)"
 
-    curl -s -u ":$(System.AccessToken)" \
+    echo "=== Getting Group ID ==="
+    RESPONSE=$(curl -s -u ":$(System.AccessToken)" \
+      "$(System.TeamFoundationCollectionUri)$(System.TeamProject)/_apis/distributedtask/variablegroups?groupName=pipeline-vars&api-version=7.0")
+    
+    echo "API Response: $RESPONSE"
+    
+    GROUP_ID=$(echo $RESPONSE | jq -r '.value[0].id')
+    echo "Group ID: $GROUP_ID"
+
+    echo "=== Updating Variable ==="
+    UPDATE_RESPONSE=$(curl -s -u ":$(System.AccessToken)" \
       -X PUT \
       -H "Content-Type: application/json" \
       "$(System.TeamFoundationCollectionUri)$(System.TeamProject)/_apis/distributedtask/variablegroups/$GROUP_ID?api-version=7.0" \
@@ -37,10 +48,10 @@ steps:
         \"name\": \"pipeline-vars\",
         \"type\": \"Vsts\",
         \"variables\": {
-          \"build1-imageTag\": { \"value\": \"v1.2.0\" },
-          \"build2-imageTag\": { \"value\": \"\" }
+          \"build1-imageTag\": { \"value\": \"v1.2.0\" }
         }
-      }"
-    echo "Saved build1 tag to Variable Group"
+      }")
+    
+    echo "Update Response: $UPDATE_RESPONSE"
   env:
     SYSTEM_ACCESSTOKEN: $(System.AccessToken)

@@ -5,7 +5,7 @@ pr: none
 resources:
   pipelines:
   - pipeline: build
-    source: BuildPipeline
+    source: ci-build
     trigger: true
 
 pool:

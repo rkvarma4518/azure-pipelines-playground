@@ -12,7 +12,7 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  imageTagFromBuild: $[ resources.pipeline.build.outputs['BuildJob.setVersion.imageTag'] ]
+  imageTagFromBuild: $[ resources.pipeline.ci-build.outputs['BuildJob.setVersion.imageTag'] ]
 
 steps:
 - script: |

@@ -25,14 +25,14 @@ pool:
 
 steps:
 - bash: |
-    echo "=== System Variables ==="
-    echo "Collection URI: $(System.TeamFoundationCollectionUri)"
-    echo "Project: $(System.TeamProject)"
-    echo "Access Token exists: $(if [ -n '$(System.AccessToken)' ]; then echo YES; else echo NO; fi)"
+    # URL encode project name (space becomes %20)
+    PROJECT=$(echo "$(System.TeamProject)" | sed 's/ /%20/g')
+    
+    echo "Encoded Project: $PROJECT"
 
     echo "=== Getting Group ID ==="
-    RESPONSE=$(curl -s -u ":$(System.AccessToken)" \
-      "$(System.TeamFoundationCollectionUri)$(System.TeamProject)/_apis/distributedtask/variablegroups?groupName=pipeline-vars&api-version=7.0")
+    RESPONSE=$(curl -v -u ":$(System.AccessToken)" \
+      "$(System.TeamFoundationCollectionUri)$PROJECT/_apis/distributedtask/variablegroups?groupName=pipeline-vars&api-version=7.0")
     
     echo "API Response: $RESPONSE"
     
@@ -43,7 +43,7 @@ steps:
     UPDATE_RESPONSE=$(curl -s -u ":$(System.AccessToken)" \
       -X PUT \
       -H "Content-Type: application/json" \
-      "$(System.TeamFoundationCollectionUri)$(System.TeamProject)/_apis/distributedtask/variablegroups/$GROUP_ID?api-version=7.0" \
+      "$(System.TeamFoundationCollectionUri)$PROJECT/_apis/distributedtask/variablegroups/$GROUP_ID?api-version=7.0" \
       -d "{
         \"name\": \"pipeline-vars\",
         \"type\": \"Vsts\",

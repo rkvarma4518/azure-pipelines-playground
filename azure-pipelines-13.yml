@@ -1,3 +1,50 @@
+# trigger: none
+# pr: none
+
+# resources:
+#   pipelines:
+#   - pipeline: build1
+#     source: ci-build-1
+#     trigger: true
+#   - pipeline: build2
+#     source: ci-build-2
+#     trigger: true
+
+# pool:
+#   vmImage: ubuntu-latest
+
+# steps:
+# - task: DownloadPipelineArtifact@2
+#   continueOnError: true
+#   inputs:
+#     buildType: specific
+#     project: $(System.TeamProject)
+#     definition: ci-build-1
+#     buildVersionToDownload: latestFromBranch
+#     artifactName: build1ImageTag
+#     targetPath: $(Pipeline.Workspace)/build1
+
+# - task: DownloadPipelineArtifact@2
+#   continueOnError: true
+#   inputs:
+#     buildType: specific
+#     project: $(System.TeamProject)
+#     definition: ci-build-2
+#     buildVersionToDownload: latestFromBranch
+#     artifactName: build2ImageTag
+#     targetPath: $(Pipeline.Workspace)/build2
+
+# - bash: |
+#     BUILD1_TAG=$(cat $(Pipeline.Workspace)/build1/imageTag.txt 2>/dev/null || echo "NOT FOUND")
+#     BUILD2_TAG=$(cat $(Pipeline.Workspace)/build2/imageTag.txt 2>/dev/null || echo "NOT FOUND")
+#     echo "Build1 tag : $BUILD1_TAG"
+#     echo "Build2 tag : $BUILD2_TAG"
+
+
+
+
+
+
 trigger: none
 pr: none
 
@@ -10,32 +57,13 @@ resources:
     source: ci-build-2
     trigger: true
 
+variables:
+- group: pipeline-vars       # 👈 loads all variables from group
+
 pool:
   vmImage: ubuntu-latest
 
 steps:
-- task: DownloadPipelineArtifact@2
-  continueOnError: true
-  inputs:
-    buildType: specific
-    project: $(System.TeamProject)
-    definition: ci-build-1
-    buildVersionToDownload: latestFromBranch
-    artifactName: build1ImageTag
-    targetPath: $(Pipeline.Workspace)/build1
-
-- task: DownloadPipelineArtifact@2
-  continueOnError: true
-  inputs:
-    buildType: specific
-    project: $(System.TeamProject)
-    definition: ci-build-2
-    buildVersionToDownload: latestFromBranch
-    artifactName: build2ImageTag
-    targetPath: $(Pipeline.Workspace)/build2
-
 - bash: |
-    BUILD1_TAG=$(cat $(Pipeline.Workspace)/build1/imageTag.txt 2>/dev/null || echo "NOT FOUND")
-    BUILD2_TAG=$(cat $(Pipeline.Workspace)/build2/imageTag.txt 2>/dev/null || echo "NOT FOUND")
-    echo "Build1 tag : $BUILD1_TAG"
-    echo "Build2 tag : $BUILD2_TAG"
+    echo "Build1 tag: $(build1-imageTag)"
+    echo "Build2 tag: $(build2-imageTag)"

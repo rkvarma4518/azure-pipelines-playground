@@ -1,5 +1,4 @@
 trigger: none
-
 pr: none
 
 resources:
@@ -11,9 +10,10 @@ resources:
 pool:
   vmImage: ubuntu-latest
 
-variables:
-  imageTagFromBuild: $[ resources.pipeline.ci-build.outputs['BuildJob.setVersion.imageTag'] ]
-
-steps:
-- script: |
-    echo "Received image tag: $(imageTagFromBuild)"
+jobs:
+- job: DeployJob
+  variables:
+    imageTagFromBuild: $[ resources.pipeline['build'].outputs['BuildJob.setVersion.imageTag'] ]
+  steps:
+  - script: |
+      echo "Received image tag: $(imageTagFromBuild)"

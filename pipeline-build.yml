@@ -9,7 +9,10 @@ stages:
   jobs:
   - job: BuildJob
     steps:
-    - script: |
-        echo "Setting version variable"
+    - bash: |
         echo "##vso[task.setvariable variable=imageTag;isOutput=true]v1.2.0"
       name: setVersion
+
+    - bash: |
+        echo "Verify imageTag is set: $(setVersion.imageTag)"
+      name: verifyVersion

@@ -1,3 +1,22 @@
+# trigger: none
+# pr: none
+
+# pool:
+#   vmImage: ubuntu-latest
+
+# steps:
+# - bash: echo "v2.5.0" > $(Build.ArtifactStagingDirectory)/imageTag.txt
+
+# - task: PublishPipelineArtifact@1
+#   inputs:
+#     targetPath: $(Build.ArtifactStagingDirectory)/imageTag.txt
+#     artifact: build2ImageTag
+
+
+
+
+
+
 trigger: none
 pr: none
 
@@ -5,9 +24,23 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- bash: echo "v2.5.0" > $(Build.ArtifactStagingDirectory)/imageTag.txt
+- bash: |
+    GROUP_ID=$(curl -s -u ":$(System.AccessToken)" \
+      "$(System.TeamFoundationCollectionUri)$(System.TeamProject)/_apis/distributedtask/variablegroups?groupName=pipeline-vars&api-version=7.0" \
+      | jq -r '.value[0].id')
 
-- task: PublishPipelineArtifact@1
-  inputs:
-    targetPath: $(Build.ArtifactStagingDirectory)/imageTag.txt
-    artifact: build2ImageTag
+    curl -s -u ":$(System.AccessToken)" \
+      -X PUT \
+      -H "Content-Type: application/json" \
+      "$(System.TeamFoundationCollectionUri)$(System.TeamProject)/_apis/distributedtask/variablegroups/$GROUP_ID?api-version=7.0" \
+      -d "{
+        \"name\": \"pipeline-vars\",
+        \"type\": \"Vsts\",
+        \"variables\": {
+          \"build1-imageTag\": { \"value\": \"\" },
+          \"build2-imageTag\": { \"value\": \"v2.5.0\" }
+        }
+      }"
+    echo "Saved build2 tag to Variable Group"
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)

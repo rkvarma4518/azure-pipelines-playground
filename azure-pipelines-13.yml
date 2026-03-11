@@ -3,17 +3,39 @@ pr: none
 
 resources:
   pipelines:
-  - pipeline: build
-    source: ci-build
+  - pipeline: build1
+    source: ci-build-1
+    trigger: true
+  - pipeline: build2
+    source: ci-build-2
     trigger: true
 
 pool:
   vmImage: ubuntu-latest
 
-jobs:
-- job: DeployJob
-  variables:
-    imageTagFromBuild: $[ resources.pipeline.build.outputs['BuildStage.BuildJob.setVersion.imageTag'] ]
-  steps:
-  - bash: |
-      echo "Received image tag: $(imageTagFromBuild)"
+steps:
+- task: DownloadPipelineArtifact@2
+  continueOnError: true
+  inputs:
+    buildType: specific
+    project: $(System.TeamProject)
+    definition: ci-build-1
+    buildVersionToDownload: latestFromBranch
+    artifactName: build1ImageTag
+    targetPath: $(Pipeline.Workspace)/build1
+
+- task: DownloadPipelineArtifact@2
+  continueOnError: true
+  inputs:
+    buildType: specific
+    project: $(System.TeamProject)
+    definition: ci-build-2
+    buildVersionToDownload: latestFromBranch
+    artifactName: build2ImageTag
+    targetPath: $(Pipeline.Workspace)/build2
+
+- bash: |
+    BUILD1_TAG=$(cat $(Pipeline.Workspace)/build1/imageTag.txt 2>/dev/null || echo "NOT FOUND")
+    BUILD2_TAG=$(cat $(Pipeline.Workspace)/build2/imageTag.txt 2>/dev/null || echo "NOT FOUND")
+    echo "Build1 tag: $BUILD1_TAG"
+    echo "Build2 tag: $BUILD2_TAG"

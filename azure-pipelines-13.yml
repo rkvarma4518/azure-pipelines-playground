@@ -37,5 +37,5 @@ steps:
 - bash: |
     BUILD1_TAG=$(cat $(Pipeline.Workspace)/build1/imageTag.txt 2>/dev/null || echo "NOT FOUND")
     BUILD2_TAG=$(cat $(Pipeline.Workspace)/build2/imageTag.txt 2>/dev/null || echo "NOT FOUND")
-    echo "Build1 tag: $BUILD1_TAG"
-    echo "Build2 tag: $BUILD2_TAG"
+    echo "Build1 tag : $BUILD1_TAG"
+    echo "Build2 tag : $BUILD2_TAG"

@@ -25,21 +25,10 @@ pool:
 
 steps:
 - bash: |
-    # URL encode project name (space becomes %20)
     PROJECT=$(echo "$(System.TeamProject)" | sed 's/ /%20/g')
     
-    echo "Encoded Project: $PROJECT"
+    GROUP_ID=9  # We know it's 9 now
 
-    echo "=== Getting Group ID ==="
-    RESPONSE=$(curl -v -u ":$(System.AccessToken)" \
-      "$(System.TeamFoundationCollectionUri)$PROJECT/_apis/distributedtask/variablegroups?groupName=pipeline-vars&api-version=7.0")
-    
-    echo "API Response: $RESPONSE"
-    
-    GROUP_ID=$(echo $RESPONSE | jq -r '.value[0].id')
-    echo "Group ID: $GROUP_ID"
-
-    echo "=== Updating Variable ==="
     UPDATE_RESPONSE=$(curl -s -u ":$(System.AccessToken)" \
       -X PUT \
       -H "Content-Type: application/json" \
@@ -47,8 +36,17 @@ steps:
       -d "{
         \"name\": \"pipeline-vars\",
         \"type\": \"Vsts\",
+        \"variableGroupProjectReferences\": [
+          {
+            \"name\": \"pipeline-vars\",
+            \"projectReference\": {
+              \"name\": \"$(System.TeamProject)\"
+            }
+          }
+        ],
         \"variables\": {
-          \"build1-imageTag\": { \"value\": \"v1.2.0\" }
+          \"build1-imageTag\": { \"value\": \"v1.2.0\" },
+          \"build2-imageTag\": { \"value\": \"\" }
         }
       }")
     

@@ -1,0 +1,19 @@
+trigger: none
+
+pr: none
+
+resources:
+  pipelines:
+  - pipeline: build
+    source: BuildPipeline
+    trigger: true
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  imageTagFromBuild: $[ resources.pipeline.build.outputs['BuildJob.setVersion.imageTag'] ]
+
+steps:
+- script: |
+    echo "Received image tag: $(imageTagFromBuild)"

@@ -14,7 +14,6 @@ jobs:
 - job: DeployJob
   variables:
     imageTagFromBuild: $[ resources.pipeline.build.outputs['BuildStage.BuildJob.setVersion.imageTag'] ]
-                                                             # 👆 stage name is now required in the path
   steps:
-  - script: |
+  - bash: |
       echo "Received image tag: $(imageTagFromBuild)"

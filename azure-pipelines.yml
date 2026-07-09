@@ -16,7 +16,7 @@ stages:
     - script: |
         MONTH=$(date +%-m)
         YEAR=$(date +%Y)
-        TAG="qa.$YEAR.$MONTH.$(Build.BuildId)"
+        TAG="qa.$YEAR.$MONTH.$(Rev.r)"
         echo "##vso[task.setvariable variable=imageTag;isOutput=true]$TAG"
         echo "Generated tag: $TAG"
       name: setTag

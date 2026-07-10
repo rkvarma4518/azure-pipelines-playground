@@ -1,9 +1,13 @@
-name: '$(Build.SourceBranchName).$(Year:yyyy).$(Month).$(Rev:r)'
+name: '$(BuildPrefix).$(Year:yyyy).$(Month).$(Rev:r)'
 
 trigger: none
 
 pool:
   vmImage: 'ubuntu-latest'
+
+variables:
+  - name: BuildPrefix
+    value: 'dev'
 
 stages:
 - stage: Build
